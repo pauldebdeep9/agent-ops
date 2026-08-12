@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "isc-agent-ops"
+version = "0.1.0"
+description = "Agentic three-way match exception resolution. Proposes; never executes."
+requires-python = ">=3.11"
+# Standalone by decision (docs/adr/001-standalone-build.md). No path dependency
+# on isc-docint.
+dependencies = ["pydantic>=2.9", "openai>=1.40"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+include = ["iscops*"]

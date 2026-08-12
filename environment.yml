@@ -1,0 +1,8 @@
+# Compiled deps only. Pure-Python lives in pyproject.toml.
+# The env is shared across projects by choice; nothing here is pinned tightly
+# enough to fight isc-docint.
+name: Sai2608
+channels: [conda-forge]
+dependencies:
+  - python=3.11
+  - pip
