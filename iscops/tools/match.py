@@ -1,11 +1,4 @@
-"""Deterministic three-way match. No LLM, no confidence, exact arithmetic.
-
-This module is ground truth for the approval gate. The agent does not compute
-here; it dispatches tools and chooses a disposition. That split is deliberate —
-a model that re-derives arithmetic in tokens will eventually get it wrong in a
-way no test catches, because the test asserts the tool's output and never the
-agent's restatement of it.
-"""
+"""Deterministic three-way match using exact arithmetic."""
 
 from decimal import Decimal as D
 
@@ -13,11 +6,6 @@ from iscops.domain.records import MatchCase
 from iscops.domain.taxonomy import ExceptionClass
 
 #: Unit-price tolerance: 2% of PO unit price, floored at $0.50.
-#:
-#: The brief said "2% or $50, whichever is greater". Applied to a unit price of
-#: 12.50 that is a 400% band, which would swallow every price variance in the
-#: corpus and make S03 and S12 undetectable. Flagged rather than routed around:
-#: $50 is an extended-amount threshold, not a unit-price one.
 PRICE_TOLERANCE_PCT = D("0.02")
 PRICE_TOLERANCE_FLOOR = D("0.50")
 
@@ -44,7 +32,7 @@ def absorbed_variance(case: MatchCase) -> bool:
     """
     po_by_line = {ln.line_number: ln for ln in case.purchase_order.lines}
     for inv in case.invoice.lines:
-        po = po_by_line.get(inv.po_line_number) if inv.po_line_number else None
+        po = po_by_line.get(inv.po_line_number)
         if po is None or inv.uom != po.uom:
             continue
         tol = max(po.unit_price * PRICE_TOLERANCE_PCT, PRICE_TOLERANCE_FLOOR)
@@ -63,7 +51,7 @@ def detect_exceptions(case: MatchCase) -> frozenset[ExceptionClass]:
     rcpt_by_line = {ln.po_line_number: ln for ln in case.goods_receipt.lines}
 
     for inv in case.invoice.lines:
-        if inv.po_line_number is None or inv.po_line_number not in po_by_line:
+        if inv.po_line_number not in po_by_line:
             found.add(ExceptionClass.PART_NOT_ON_PO)
             continue
 
@@ -85,14 +73,10 @@ def detect_exceptions(case: MatchCase) -> frozenset[ExceptionClass]:
             else D(0)
         )
         if inv.quantity > received:
-            # Over-invoiced vs short-received turns on the PO: if the PO covers
-            # the invoiced quantity, the delivery is late; if it does not, the
-            # supplier billed for goods never ordered.
+            # Above the PO quantity is over-invoiced; otherwise receipt is short.
             if inv.quantity > po.quantity:
                 found.add(ExceptionClass.QUANTITY_OVER_INVOICED)
-            elif received < po.quantity:
-                found.add(ExceptionClass.SHORT_RECEIPT)
             else:
-                found.add(ExceptionClass.QUANTITY_OVER_INVOICED)
+                found.add(ExceptionClass.SHORT_RECEIPT)
 
     return frozenset(found)

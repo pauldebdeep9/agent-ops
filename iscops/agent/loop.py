@@ -18,7 +18,7 @@ from iscops.agent.client import ChatClient
 from iscops.approval.gate import Proposal
 from iscops.domain.records import MatchCase
 from iscops.domain.taxonomy import Disposition, ExceptionClass
-from iscops.tools.registry import build_registry
+from iscops.tools.registry import TOOL_SCHEMAS, build_registry
 
 
 class Termination(str, Enum):
@@ -77,7 +77,7 @@ def run_case(
     trace_id = uuid.uuid4().hex[:12]
     observed: list[str] = []
     registry = build_registry(case, trace_id, observed)
-    schemas = [t.as_openai_schema() for t in registry.values()]
+    schemas = TOOL_SCHEMAS
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": SYSTEM},
         {"role": "user", "content": f"Resolve case {case.scenario_id}."},
@@ -122,9 +122,8 @@ def run_case(
                 result.steps.append(Step(i, call.name, None, None, call.arguments[:200]))
                 return result
 
-            tool = registry[call.name]
             try:
-                out = tool.fn(**args)
+                out = registry[call.name](**args)
             except TypeError as e:
                 result.termination = Termination.INVALID_TOOL_CALL
                 result.detail = f"{call.name}: bad arguments: {e}"

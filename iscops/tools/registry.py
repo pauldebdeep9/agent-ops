@@ -1,44 +1,56 @@
-"""Tool protocol, registry, and the six tools.
+"""Six case-bound tools and their OpenAI function schemas.
 
-Every tool returns structured data, never prose. Exactly one tool is not
-read-only. That invariant is one assertion (see tests/test_tools.py) and it is
-the enforceable form of "this agent does not move money".
-
-Schemas are hand-written dicts rather than generated from Pydantic. Tool calling
-does not require strict mode, so none of P1's schema-hardening problems
-(additionalProperties on every $def, every property in required) arise here.
+Every tool returns structured data, and write_proposal only records a proposal.
 """
 
 import json
-from dataclasses import dataclass
 from decimal import Decimal as D
-from typing import Any, Callable
+from typing import Any
 
 import iscops.config as config
 from iscops.domain.records import MatchCase
 from iscops.tools.match import uom_factor
 
 
-@dataclass(frozen=True)
-class Tool:
-    name: str
-    description: str
-    parameters: dict[str, Any]
-    fn: Callable[..., dict[str, Any]]
-    read_only: bool = True
-
-    def as_openai_schema(self) -> dict[str, Any]:
-        return {
-            "type": "function",
-            "function": {
-                "name": self.name,
-                "description": self.description,
-                "parameters": self.parameters,
-            },
-        }
-
-
 _NO_ARGS = {"type": "object", "properties": {}, "required": []}
+
+TOOL_SCHEMAS = [
+    {"type": "function", "function": {
+        "name": "get_po", "description": "Retrieve the purchase order and its lines.",
+        "parameters": _NO_ARGS,
+    }},
+    {"type": "function", "function": {
+        "name": "get_receipt", "description": "Retrieve the goods receipt. May have zero lines.",
+        "parameters": _NO_ARGS,
+    }},
+    {"type": "function", "function": {
+        "name": "get_invoice", "description": "Retrieve the invoice and prior invoice numbers on this PO.",
+        "parameters": _NO_ARGS,
+    }},
+    {"type": "function", "function": {
+        "name": "compare_quantities",
+        "description": "Per-line ordered vs received vs invoiced, with UOM and any conversion factor.",
+        "parameters": _NO_ARGS,
+    }},
+    {"type": "function", "function": {
+        "name": "compare_prices",
+        "description": "Per-line PO vs invoiced unit price and extended amounts.",
+        "parameters": _NO_ARGS,
+    }},
+    {"type": "function", "function": {
+        "name": "write_proposal",
+        "description": "Record a proposed disposition. Proposes only; nothing is executed.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "disposition": {"type": "string"},
+                "exception_classes": {"type": "array", "items": {"type": "string"}},
+                "rationale": {"type": "string"},
+            },
+            "required": ["disposition", "exception_classes", "rationale"],
+        },
+    }},
+]
 
 
 def _s(v: D) -> str:
@@ -49,7 +61,7 @@ def _s(v: D) -> str:
 
 def build_registry(
     case: MatchCase, trace_id: str = "adhoc", observed: list[str] | None = None
-) -> dict[str, Tool]:
+) -> dict[str, Any]:
     """One registry per case. The case is closed over rather than passed as a
     tool argument, so the agent cannot address a different case by accident.
 
@@ -193,26 +205,11 @@ def build_registry(
             "rationale": rationale,
         }
 
-    tools = [
-        Tool("get_po", "Retrieve the purchase order and its lines.", _NO_ARGS, get_po),
-        Tool("get_receipt", "Retrieve the goods receipt. May have zero lines.", _NO_ARGS, get_receipt),
-        Tool("get_invoice", "Retrieve the invoice and prior invoice numbers on this PO.", _NO_ARGS, get_invoice),
-        Tool("compare_quantities", "Per-line ordered vs received vs invoiced, with UOM and any conversion factor.", _NO_ARGS, compare_quantities),
-        Tool("compare_prices", "Per-line PO vs invoiced unit price and extended amounts.", _NO_ARGS, compare_prices),
-        Tool(
-            "write_proposal",
-            "Record a proposed disposition. Proposes only; nothing is executed.",
-            {
-                "type": "object",
-                "properties": {
-                    "disposition": {"type": "string"},
-                    "exception_classes": {"type": "array", "items": {"type": "string"}},
-                    "rationale": {"type": "string"},
-                },
-                "required": ["disposition", "exception_classes", "rationale"],
-            },
-            write_proposal,
-            read_only=False,
-        ),
-    ]
-    return {t.name: t for t in tools}
+    return {
+        "get_po": get_po,
+        "get_receipt": get_receipt,
+        "get_invoice": get_invoice,
+        "compare_quantities": compare_quantities,
+        "compare_prices": compare_prices,
+        "write_proposal": write_proposal,
+    }

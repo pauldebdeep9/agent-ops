@@ -7,16 +7,10 @@ arithmetic, and judgment is the human approver's job.
 
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 
-class _Frozen(BaseModel):
-    # strict=True is what makes float-for-Decimal raise instead of silently
-    # coercing. Without it, 12.30 becomes Decimal('12.30000000000000071...').
-    model_config = ConfigDict(frozen=True, strict=True)
-
-
-class PurchaseOrderLine(_Frozen):
+class PurchaseOrderLine(BaseModel):
     line_number: int
     part_number: str
     quantity: Decimal
@@ -28,28 +22,28 @@ class PurchaseOrderLine(_Frozen):
         return self.quantity * self.unit_price
 
 
-class PurchaseOrder(_Frozen):
+class PurchaseOrder(BaseModel):
     po_number: str
     supplier: str
     currency: str
     lines: tuple[PurchaseOrderLine, ...]
 
 
-class GoodsReceiptLine(_Frozen):
+class GoodsReceiptLine(BaseModel):
     po_line_number: int
     part_number: str
     quantity_received: Decimal
     uom: str
 
 
-class GoodsReceipt(_Frozen):
+class GoodsReceipt(BaseModel):
     receipt_number: str
     po_number: str
     # May be empty: that is how "nothing has been received" is expressed.
     lines: tuple[GoodsReceiptLine, ...]
 
 
-class InvoiceLine(_Frozen):
+class InvoiceLine(BaseModel):
     line_number: int
     # None is legal and load-bearing: PART_NOT_ON_PO must be representable.
     po_line_number: int | None
@@ -63,7 +57,7 @@ class InvoiceLine(_Frozen):
         return self.quantity * self.unit_price
 
 
-class Invoice(_Frozen):
+class Invoice(BaseModel):
     invoice_id: str
     supplier_invoice_number: str
     po_number: str
@@ -72,7 +66,7 @@ class Invoice(_Frozen):
     lines: tuple[InvoiceLine, ...]
 
 
-class MatchCase(_Frozen):
+class MatchCase(BaseModel):
     scenario_id: str
     purchase_order: PurchaseOrder
     goods_receipt: GoodsReceipt

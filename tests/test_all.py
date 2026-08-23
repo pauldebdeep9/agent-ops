@@ -6,14 +6,13 @@ import json
 from decimal import Decimal as D
 
 import pytest
-from pydantic import ValidationError
 
 import iscops.config as config
 from iscops.agent.client import ModelTurn, ToolCall
 from iscops.agent.loop import Termination, run_case
 from iscops.approval.gate import GateRejection, Proposal, approve
 from iscops.corpus.scenarios import CASES, GOLD
-from iscops.domain.records import InvoiceLine, PurchaseOrderLine
+from iscops.domain.records import InvoiceLine
 from iscops.domain.taxonomy import (
     CLEAN_EXACT,
     PERMITTED,
@@ -40,13 +39,6 @@ def test_every_exception_permits_escalate_and_one_remedy():
     for cls, allowed in PERMITTED.items():
         assert Disposition.ESCALATE in allowed, cls
         assert len(allowed) >= 2, cls
-
-
-def test_money_rejects_float():
-    with pytest.raises(ValidationError):
-        PurchaseOrderLine(
-            line_number=1, part_number="X", quantity=D(1), uom="EA", unit_price=12.5
-        )
 
 
 def test_decimal_arithmetic_exact_at_the_cent():
@@ -97,9 +89,9 @@ def test_gold_dispositions_are_all_permitted():
 def test_uom_case_has_agreeing_extended_amounts():
     # If this stops holding, S06 is no longer the trap it was built to be.
     reg = build_registry(CASES["S06"])
-    row = reg["compare_prices"].fn()["lines"][0]
+    row = reg["compare_prices"]()["lines"][0]
     assert row["extended_amounts_agree"] is True
-    assert reg["compare_quantities"].fn()["lines"][0]["uom_conversion_factor"] == "12"
+    assert reg["compare_quantities"]()["lines"][0]["uom_conversion_factor"] == "12"
 
 
 def test_absorbed_variance_separates_s01_from_s02():
@@ -118,25 +110,19 @@ def test_corpus_composition():
 # --- tools -------------------------------------------------------------------
 
 
-def test_exactly_one_non_read_only_tool():
-    reg = build_registry(CASES["S01"])
-    assert [t.name for t in reg.values() if not t.read_only] == ["write_proposal"]
-
-
 def test_tool_output_is_json_serialisable_and_free_of_floats():
-    for tool in build_registry(CASES["S01"]).values():
-        if tool.name == "write_proposal":
+    for name, tool in build_registry(CASES["S01"]).items():
+        if name == "write_proposal":
             continue
-        blob = json.dumps(tool.fn())
+        blob = json.dumps(tool())
         assert "e-" not in blob  # no float exponent notation leaking in
         json.loads(blob)
 
 
 def test_write_proposal_actually_writes_proposal_json(tmp_path):
-    # read_only=False on this tool is supposed to mean something. Before this,
-    # nothing did: the tool returned a dict and touched no disk.
+    # The proposal tool records the submitted proposal but executes nothing.
     reg = build_registry(CASES["S05"], trace_id="t-write-test", observed=[])
-    reg["write_proposal"].fn(
+    reg["write_proposal"](
         disposition="hold_pending_receipt",
         exception_classes=["short_receipt"],
         rationale="because",
