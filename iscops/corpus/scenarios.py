@@ -179,6 +179,9 @@ CASES: dict[str, MatchCase] = {
 }
 
 
+DEMO_CASE_IDS = ("S01", "S02", "S03", "S05", "S06", "S08")
+
+
 GOLD: dict[str, Gold] = {
     "S01": Gold(
         scenario_id="S01",

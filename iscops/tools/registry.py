@@ -1,13 +1,8 @@
-"""Six case-bound tools and their OpenAI function schemas.
+"""Six case-bound tools and their OpenAI function schemas."""
 
-Every tool returns structured data, and write_proposal only records a proposal.
-"""
-
-import json
 from decimal import Decimal as D
 from typing import Any
 
-import iscops.config as config
 from iscops.domain.records import MatchCase
 from iscops.tools.match import uom_factor
 
@@ -59,17 +54,8 @@ def _s(v: D) -> str:
     return str(v)
 
 
-def build_registry(
-    case: MatchCase, trace_id: str = "adhoc", observed: list[str] | None = None
-) -> dict[str, Any]:
-    """One registry per case. The case is closed over rather than passed as a
-    tool argument, so the agent cannot address a different case by accident.
-
-    trace_id and observed let write_proposal persist its run identifier and the
-    evidence recorded by the dispatcher.
-    """
-    if observed is None:
-        observed = []
+def build_registry(case: MatchCase) -> dict[str, Any]:
+    """Bind tools to one case so the agent cannot address another case."""
 
     def get_po() -> dict[str, Any]:
         return {
@@ -176,17 +162,6 @@ def build_registry(
     def write_proposal(
         disposition: str, exception_classes: list[str], rationale: str
     ) -> dict[str, Any]:
-        # Record the raw claim; the gate validates it separately.
-        run_dir = config.RUNS_DIR / trace_id
-        run_dir.mkdir(parents=True, exist_ok=True)
-        (run_dir / "proposal.json").write_text(json.dumps({
-            "scenario_id": case.scenario_id,
-            "trace_id": trace_id,
-            "disposition": disposition,
-            "exception_classes": exception_classes,
-            "rationale": rationale,
-            "evidence": list(dict.fromkeys(observed)),
-        }, indent=2))
         return {
             "recorded": True,
             "disposition": disposition,

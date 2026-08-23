@@ -7,7 +7,6 @@ from decimal import Decimal as D
 
 import pytest
 
-import iscops.config as config
 from iscops.agent.client import ModelTurn, ToolCall
 from iscops.agent.loop import Termination, run_case
 from iscops.approval.gate import GateRejection, Proposal, approve
@@ -20,16 +19,8 @@ from iscops.domain.taxonomy import (
     ExceptionClass,
     permitted_for,
 )
-from iscops.eval.runner import persist_run
 from iscops.tools.match import absorbed_variance, detect_exceptions
 from iscops.tools.registry import build_registry
-
-
-@pytest.fixture(autouse=True)
-def _isolate_runs_dir(tmp_path, monkeypatch):
-    """write_proposal and persist_run write to config.RUNS_DIR. Redirect it so
-    make test never touches the repo's real runs/ directory."""
-    monkeypatch.setattr(config, "RUNS_DIR", tmp_path)
 
 
 # --- domain -----------------------------------------------------------------
@@ -117,20 +108,6 @@ def test_tool_output_is_json_serialisable_and_free_of_floats():
         blob = json.dumps(tool())
         assert "e-" not in blob  # no float exponent notation leaking in
         json.loads(blob)
-
-
-def test_write_proposal_actually_writes_proposal_json(tmp_path):
-    # The proposal tool records the submitted proposal but executes nothing.
-    reg = build_registry(CASES["S05"], trace_id="t-write-test", observed=[])
-    reg["write_proposal"](
-        disposition="hold_pending_receipt",
-        exception_classes=["short_receipt"],
-        rationale="because",
-    )
-    payload = json.loads((tmp_path / "t-write-test" / "proposal.json").read_text())
-    assert payload["scenario_id"] == "S05"
-    assert payload["trace_id"] == "t-write-test"
-    assert payload["disposition"] == "hold_pending_receipt"
 
 
 # --- approval gate -----------------------------------------------------------
@@ -226,85 +203,15 @@ def test_unknown_tool_terminates():
     assert res.termination is Termination.INVALID_TOOL_CALL
 
 
-# --- audit trail persistence --------------------------------------------------
+# --- batched tool calls ------------------------------------------------------
 
 
 def _batch(*names):
     return ModelTurn(text=None, tool_calls=tuple(ToolCall(f"c{n}", n, "{}") for n in names))
 
 
-def test_rejected_proposal_produces_rejection_json():
-    """A gate that silently discards is worse than no gate: reject_duplicate is
-    not permitted for short_receipt, and that rejection must leave a record."""
-    proposal_args = json.dumps({
-        "disposition": "reject_duplicate",
-        "exception_classes": ["short_receipt"],
-        "rationale": "wrong on purpose",
-    })
-    client = ScriptedClient([
-        _call("get_po"), _call("get_receipt"), _call("get_invoice"),
-        _call("write_proposal", proposal_args),
-    ])
-    res = run_case(CASES["S05"], client)
-    assert res.termination is Termination.DISPOSITION_REACHED
-
-    run_dir = persist_run(
-        CASES["S05"], res, model="test", step_budget=8,
-        prompt_tokens=0, completion_tokens=0,
-        credential_source="test", utc_start="t0", utc_end="t1",
-    )
-    assert (run_dir / "proposal.json").exists()  # written by the tool itself
-    assert not (run_dir / "approval.json").exists()
-    rejection = json.loads((run_dir / "rejection.json").read_text())
-    assert rejection["scenario_id"] == "S05"
-    assert "not permitted" in rejection["reason"]
-    meta = json.loads((run_dir / "meta.json").read_text())
-    assert meta["gate_verdict"] == "rejected"
-
-
-def test_approved_proposal_produces_approval_json():
-    proposal_args = json.dumps({
-        "disposition": "hold_pending_receipt",
-        "exception_classes": ["short_receipt"],
-        "rationale": "60 of 100 received",
-    })
-    client = ScriptedClient([
-        _call("get_po"), _call("get_receipt"), _call("get_invoice"),
-        _call("write_proposal", proposal_args),
-    ])
-    res = run_case(CASES["S05"], client)
-
-    run_dir = persist_run(
-        CASES["S05"], res, model="test", step_budget=8,
-        prompt_tokens=0, completion_tokens=0,
-        credential_source="test", utc_start="t0", utc_end="t1",
-    )
-    assert not (run_dir / "rejection.json").exists()
-    approval = json.loads((run_dir / "approval.json").read_text())
-    assert approval["disposition"] == "hold_pending_receipt"
-    meta = json.loads((run_dir / "meta.json").read_text())
-    assert meta["gate_verdict"] == "approved"
-
-
-def test_steps_jsonl_has_one_line_per_dispatch_and_no_float_exponents():
-    client = ScriptedClient([_call("get_po"), _call("get_receipt"), _call("get_invoice")])
-    res = run_case(CASES["S05"], client, step_budget=3)
-    run_dir = persist_run(
-        CASES["S05"], res, model="test", step_budget=3,
-        prompt_tokens=0, completion_tokens=0,
-        credential_source="test", utc_start="t0", utc_end="t1",
-    )
-    lines = (run_dir / "steps.jsonl").read_text().splitlines()
-    assert len(lines) == len(res.steps) == 3
-    for line in lines:
-        assert "e-" not in line
-        row = json.loads(line)
-        assert set(row) == {"index", "tool", "arguments", "result", "error"}
-
-
-def test_turns_consumed_and_tool_calls_dispatched_differ_under_batching():
-    """Budget bounds turns, not tool calls: one batched turn can dispatch
-    several. meta.json must not conflate the two."""
+def test_batched_tool_calls_are_dispatched_before_the_next_turn():
+    """One model turn may dispatch several tools before the next turn."""
     proposal_args = json.dumps({
         "disposition": "hold_pending_receipt",
         "exception_classes": ["short_receipt"],
@@ -315,17 +222,10 @@ def test_turns_consumed_and_tool_calls_dispatched_differ_under_batching():
         _call("write_proposal", proposal_args),
     ])
     res = run_case(CASES["S05"], client)
-    assert res.turns_consumed == 2
+    assert client.calls == 2
+    assert [step.tool for step in res.steps] == [
+        "get_po", "get_receipt", "get_invoice", "write_proposal",
+    ]
     assert len(res.steps) == 4
-
-    run_dir = persist_run(
-        CASES["S05"], res, model="test", step_budget=8,
-        prompt_tokens=10, completion_tokens=5,
-        credential_source="test", utc_start="t0", utc_end="t1",
-    )
-    meta = json.loads((run_dir / "meta.json").read_text())
-    assert meta["turns_consumed"] == 2
-    assert meta["tool_calls_dispatched"] == 4
-    assert meta["prompt_tokens"] == 10
-    assert meta["completion_tokens"] == 5
-    assert meta["credential_source"] == "test"
+    assert res.termination is Termination.DISPOSITION_REACHED
+    assert res.proposal is not None

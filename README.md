@@ -13,10 +13,9 @@ Standalone by decision — imports nothing from `isc-docint`. See
 conda activate Sai2608
 pip install -e ".[dev]"
 
-make test        # 27 tests, no API key needed
+make test        # no API key needed
 make baseline    # deterministic engine vs gold across all 12 scenarios, no key
-make run         # the agent loop against a live model; needs OPENAI_API_KEY
-make transcripts # render a human-readable transcript.md for the most recent run
+make demo        # representative live scenarios; needs OPENAI_API_KEY
 ```
 
 `make baseline` is worth running first. If the deterministic engine disagrees with
@@ -35,7 +34,7 @@ iscops/
   agent/client.py      ~50-line chat client
   agent/loop.py        while over tool dispatch; typed termination
   approval/gate.py     the item that matters
-  eval/                baseline (no LLM), runner, cli
+  eval/baseline.py     deterministic check across all 12 cases, no LLM
 ```
 
 ~700 LOC. No agent framework: the loop is a `while` over tool dispatch, because
