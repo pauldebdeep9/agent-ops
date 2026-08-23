@@ -1,0 +1,19 @@
+{
+  "scenario_id": "S01",
+  "actor": "pending_human_review",
+  "timestamp_utc": "2026-08-12T12:53:36.633260+00:00",
+  "disposition": "auto_match",
+  "exception_classes": [],
+  "rationale": "All quantities and prices match between the purchase order, goods receipt, and invoice. No exceptions were found.",
+  "trace_id": "6aa5e0f262f7",
+  "evidence": [
+    "get_po",
+    "get_receipt",
+    "get_invoice",
+    "compare_quantities",
+    "compare_prices",
+    "write_proposal"
+  ],
+  "verified_exception_classes": [],
+  "applied": false
+}

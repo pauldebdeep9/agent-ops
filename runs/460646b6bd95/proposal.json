@@ -1,0 +1,18 @@
+{
+  "scenario_id": "S06",
+  "trace_id": "460646b6bd95",
+  "disposition": "escalate",
+  "exception_classes": [
+    "uom_mismatch",
+    "price_variance"
+  ],
+  "rationale": "The invoice presents a price variance issue with the invoiced unit price significantly lower than the PO unit price, despite the extended amounts agreeing. Additionally, there is a UOM mismatch as the invoice uses EA while the PO uses CS.",
+  "evidence": [
+    "get_po",
+    "get_receipt",
+    "get_invoice",
+    "compare_quantities",
+    "compare_prices",
+    "write_proposal"
+  ]
+}

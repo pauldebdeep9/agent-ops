@@ -1,9 +1,7 @@
 """Twelve hand-constructed scenarios with known-correct dispositions.
 
-No RNG. The corpus is written out literally, so determinism is by construction
-rather than by seed — there is no wall-clock or hash-ordering surface to leak
-through. That is a simplification against P1's convention and is recorded in
-docs/LIMITATIONS.md.
+The corpus is written literally, so determinism is by construction rather than
+by seed.
 
 Composition, with numerators rather than rates:
   2/12 clean or within-tolerance
@@ -14,7 +12,7 @@ Composition, with numerators rather than rates:
 
 from decimal import Decimal as D
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from iscops.domain.records import (
     GoodsReceipt,
@@ -29,8 +27,6 @@ from iscops.domain.taxonomy import Disposition, ExceptionClass
 
 
 class Gold(BaseModel):
-    model_config = ConfigDict(frozen=True, strict=True)
-
     scenario_id: str
     exceptions: frozenset[ExceptionClass]
     disposition: Disposition

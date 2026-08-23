@@ -1,0 +1,17 @@
+{
+  "scenario_id": "S11",
+  "trace_id": "51098ddc770a",
+  "disposition": "request_po_amendment",
+  "exception_classes": [
+    "part_not_on_po"
+  ],
+  "rationale": "The invoice includes a part (TOOL-KIT) that is not listed on the purchase order. A PO amendment is needed to address this discrepancy.",
+  "evidence": [
+    "get_po",
+    "get_receipt",
+    "get_invoice",
+    "compare_quantities",
+    "compare_prices",
+    "write_proposal"
+  ]
+}

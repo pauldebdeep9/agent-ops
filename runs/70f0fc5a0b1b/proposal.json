@@ -1,0 +1,17 @@
+{
+  "scenario_id": "S07",
+  "trace_id": "70f0fc5a0b1b",
+  "disposition": "request_po_amendment",
+  "exception_classes": [
+    "part_not_on_po"
+  ],
+  "rationale": "The invoice includes a charge for part FRT-EXP, which is not listed on the purchase order. A PO amendment is required to address this additional charge.",
+  "evidence": [
+    "get_po",
+    "get_receipt",
+    "get_invoice",
+    "compare_quantities",
+    "compare_prices",
+    "write_proposal"
+  ]
+}

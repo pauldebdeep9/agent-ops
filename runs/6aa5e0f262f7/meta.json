@@ -1,0 +1,16 @@
+{
+  "scenario_id": "S01",
+  "trace_id": "6aa5e0f262f7",
+  "model": "gpt-4o-mini",
+  "step_budget": 8,
+  "termination": "disposition_reached",
+  "turns_consumed": 3,
+  "tool_calls_dispatched": 6,
+  "prompt_tokens": 2274,
+  "completion_tokens": 137,
+  "total_tokens": 2411,
+  "credential_source": ".env",
+  "gate_verdict": "approved",
+  "utc_start": "2026-08-12T12:53:31.112783+00:00",
+  "utc_end": "2026-08-12T12:53:36.632107+00:00"
+}

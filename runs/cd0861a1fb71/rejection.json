@@ -1,0 +1,5 @@
+{
+  "scenario_id": "S08",
+  "trace_id": "cd0861a1fb71",
+  "reason": "claimed exceptions ['<none>'] do not match verified ['duplicate_invoice']"
+}

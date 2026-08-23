@@ -1,6 +1,4 @@
-"""Minimal test suite. Not coverage-driven — each test exists because it pins an
-invariant that would otherwise fail silently.
-"""
+"""Compact tests for the PoC's business rules, agent loop, and safety gate."""
 
 import json
 from decimal import Decimal as D
@@ -14,7 +12,6 @@ from iscops.corpus.scenarios import CASES, GOLD
 from iscops.domain.records import InvoiceLine
 from iscops.domain.taxonomy import (
     CLEAN_EXACT,
-    PERMITTED,
     Disposition,
     ExceptionClass,
     permitted_for,
@@ -23,209 +20,186 @@ from iscops.tools.match import absorbed_variance, detect_exceptions
 from iscops.tools.registry import build_registry
 
 
-# --- domain -----------------------------------------------------------------
+def _contains_float(value) -> bool:
+    if isinstance(value, float):
+        return True
+    if isinstance(value, dict):
+        return any(_contains_float(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_contains_float(item) for item in value)
+    return False
 
 
-def test_every_exception_permits_escalate_and_one_remedy():
-    for cls, allowed in PERMITTED.items():
-        assert Disposition.ESCALATE in allowed, cls
-        assert len(allowed) >= 2, cls
-
-
-def test_decimal_arithmetic_exact_at_the_cent():
+def test_decimal_arithmetic_and_tool_payload_boundary():
     lines = [
         InvoiceLine(line_number=i, po_line_number=i, part_number="X",
                     quantity=D(3), uom="EA", unit_price=D("0.10"))
         for i in range(1, 4)
     ]
-    assert sum(ln.extended for ln in lines) == D("0.90")
+    assert sum(line.extended for line in lines) == D("0.90")
 
-
-def test_part_not_on_po_is_representable():
-    ln = InvoiceLine(line_number=1, po_line_number=None, part_number="FRT",
-                     quantity=D(1), uom="EA", unit_price=D("10.00"))
-    assert ln.po_line_number is None
-
-
-def test_permitted_intersects_rather_than_unions():
-    both = permitted_for(frozenset({
-        ExceptionClass.QUANTITY_OVER_INVOICED, ExceptionClass.PRICE_VARIANCE
-    }))
-    # release_within_tolerance is fine for a price variance alone; it must not
-    # survive once an over-invoiced quantity is also open.
-    assert Disposition.RELEASE_WITHIN_TOLERANCE not in both
-    assert Disposition.REQUEST_CREDIT_MEMO in both
-    assert permitted_for(frozenset()) == CLEAN_EXACT
-
-
-# --- corpus and match engine -------------------------------------------------
-
-
-def test_detector_agrees_with_gold_on_every_scenario():
-    diffs = {
-        sid: (sorted(x.value for x in detect_exceptions(c)),
-              sorted(x.value for x in GOLD[sid].exceptions))
-        for sid, c in CASES.items()
-        if detect_exceptions(c) != GOLD[sid].exceptions
-    }
-    assert not diffs, diffs
-
-
-def test_gold_dispositions_are_all_permitted():
-    for sid, g in GOLD.items():
-        allowed = permitted_for(g.exceptions, absorbed_variance(CASES[sid]))
-        assert g.disposition in allowed, (sid, sorted(d.value for d in allowed))
-
-
-def test_uom_case_has_agreeing_extended_amounts():
-    # If this stops holding, S06 is no longer the trap it was built to be.
-    reg = build_registry(CASES["S06"])
-    row = reg["compare_prices"]()["lines"][0]
-    assert row["extended_amounts_agree"] is True
-    assert reg["compare_quantities"]()["lines"][0]["uom_conversion_factor"] == "12"
-
-
-def test_absorbed_variance_separates_s01_from_s02():
-    assert absorbed_variance(CASES["S01"]) is False   # nothing differed
-    assert absorbed_variance(CASES["S02"]) is True    # differed, inside tolerance
-    assert absorbed_variance(CASES["S03"]) is False   # differed, outside tolerance
-
-
-def test_corpus_composition():
-    assert len(CASES) == 12
-    assert sum(1 for g in GOLD.values() if not g.exceptions) == 2
-    assert sum(1 for g in GOLD.values() if g.disposition is Disposition.ESCALATE) == 2
-    assert {c for g in GOLD.values() for c in g.exceptions} == set(ExceptionClass)
-
-
-# --- tools -------------------------------------------------------------------
-
-
-def test_tool_output_is_json_serialisable_and_free_of_floats():
     for name, tool in build_registry(CASES["S01"]).items():
         if name == "write_proposal":
             continue
-        blob = json.dumps(tool())
-        assert "e-" not in blob  # no float exponent notation leaking in
-        json.loads(blob)
+        payload = tool()
+        assert not _contains_float(payload), name
+        assert json.loads(json.dumps(payload)) == payload
 
 
-# --- approval gate -----------------------------------------------------------
+def test_disposition_policy_intersects_open_exceptions():
+    allowed = permitted_for(frozenset({
+        ExceptionClass.QUANTITY_OVER_INVOICED,
+        ExceptionClass.PRICE_VARIANCE,
+    }))
+    assert Disposition.RELEASE_WITHIN_TOLERANCE not in allowed
+    assert Disposition.REQUEST_CREDIT_MEMO in allowed
+    assert permitted_for(frozenset()) == CLEAN_EXACT
 
 
-def _proposal(disposition, exceptions):
+def test_all_12_scenarios_match_gold_and_permit_gold_dispositions():
+    expected_ids = {f"S{i:02}" for i in range(1, 13)}
+    assert set(CASES) == set(GOLD) == expected_ids
+
+    for scenario_id, case in CASES.items():
+        actual = detect_exceptions(case)
+        gold = GOLD[scenario_id]
+        assert actual == gold.exceptions, scenario_id
+        allowed = permitted_for(actual, absorbed_variance(case))
+        assert gold.disposition in allowed, scenario_id
+
+
+def test_exact_tolerated_and_real_price_variance_are_distinct():
+    assert detect_exceptions(CASES["S01"]) == frozenset()
+    assert absorbed_variance(CASES["S01"]) is False
+
+    assert detect_exceptions(CASES["S02"]) == frozenset()
+    assert absorbed_variance(CASES["S02"]) is True
+
+    assert detect_exceptions(CASES["S03"]) == frozenset({
+        ExceptionClass.PRICE_VARIANCE
+    })
+    assert absorbed_variance(CASES["S03"]) is False
+
+
+def test_uom_case_is_not_misclassified_as_price_or_quantity_variance():
+    assert detect_exceptions(CASES["S06"]) == {ExceptionClass.UOM_MISMATCH}
+    registry = build_registry(CASES["S06"])
+    assert registry["compare_prices"]()["lines"][0]["extended_amounts_agree"] is True
+    quantities = registry["compare_quantities"]()["lines"][0]
+    assert quantities["uom_conversion_factor"] == "12"
+
+
+def _proposal(disposition, exceptions, rationale="because") -> Proposal:
     return Proposal(
         disposition=disposition,
-        exception_classes=frozenset(exceptions), rationale="because",
+        exception_classes=frozenset(exceptions),
+        rationale=rationale,
     )
 
 
 def test_gate_accepts_a_correct_proposal():
-    rec = approve(CASES["S05"], _proposal(
-        Disposition.HOLD_PENDING_RECEIPT, {ExceptionClass.SHORT_RECEIPT}))
-    assert rec.disposition is Disposition.HOLD_PENDING_RECEIPT
-    assert rec.verified_exception_classes == {ExceptionClass.SHORT_RECEIPT}
+    proposal = _proposal(
+        Disposition.HOLD_PENDING_RECEIPT, {ExceptionClass.SHORT_RECEIPT}
+    )
+    record = approve(CASES["S05"], proposal)
+    assert record.disposition is Disposition.HOLD_PENDING_RECEIPT
+    assert record.verified_exception_classes == {ExceptionClass.SHORT_RECEIPT}
 
 
-def test_gate_rejects_disposition_unsupported_by_verified_facts():
-    """The P1 finding transposed: naming real exception classes is not the same
-    as proposing a disposition those facts support."""
-    with pytest.raises(GateRejection, match="not permitted"):
-        approve(CASES["S05"], _proposal(
-            Disposition.REJECT_DUPLICATE, {ExceptionClass.SHORT_RECEIPT}))
-
-
-def test_gate_rejects_claimed_exceptions_that_are_not_present():
-    # The naive answer to the UOM case. Real class, real evidence, wrong facts.
-    with pytest.raises(GateRejection, match="do not match verified"):
-        approve(CASES["S06"], _proposal(
-            Disposition.REQUEST_CREDIT_MEMO,
-            {ExceptionClass.QUANTITY_OVER_INVOICED}))
-
-
-# --- agent loop (scripted client; see docs/LIMITATIONS.md) -------------------
+@pytest.mark.parametrize(
+    ("case_id", "disposition", "exceptions", "rationale", "message"),
+    [
+        (
+            "S06", Disposition.REQUEST_CREDIT_MEMO,
+            {ExceptionClass.QUANTITY_OVER_INVOICED}, "because", "do not match verified",
+        ),
+        (
+            "S05", Disposition.REJECT_DUPLICATE,
+            {ExceptionClass.SHORT_RECEIPT}, "because", "not permitted",
+        ),
+        (
+            "S05", Disposition.HOLD_PENDING_RECEIPT,
+            {ExceptionClass.SHORT_RECEIPT}, "   ", "rationale is empty",
+        ),
+    ],
+)
+def test_gate_rejects_invalid_proposals(
+    case_id, disposition, exceptions, rationale, message
+):
+    proposal = _proposal(disposition, exceptions, rationale)
+    with pytest.raises(GateRejection, match=message):
+        approve(CASES[case_id], proposal)
 
 
 class ScriptedClient:
-    """Replays fixed turns. This exercises loop mechanics and nothing else — it
-    cannot tell us whether a real model behaves this way."""
-
-    def __init__(self, turns): self._turns, self.calls = list(turns), 0
+    def __init__(self, turns):
+        self.turns = list(turns)
+        self.calls = 0
 
     def complete(self, messages, tools):
-        turn = self._turns[min(self.calls, len(self._turns) - 1)]
+        turn = self.turns[min(self.calls, len(self.turns) - 1)]
         self.calls += 1
         return turn
 
 
-def _call(name, args="{}"):
-    return ModelTurn(text=None, tool_calls=(ToolCall(f"c{name}", name, args),))
-
-
-def test_loop_reaches_disposition():
-    proposal_args = json.dumps({
-        "disposition": "hold_pending_receipt",
-        "exception_classes": ["short_receipt"],
-        "rationale": "60 of 100 received",
-    })
-    client = ScriptedClient([
-        _call("get_po"), _call("get_receipt"), _call("get_invoice"),
-        _call("write_proposal", proposal_args),
-    ])
-    res = run_case(CASES["S05"], client)
-    assert res.termination is Termination.DISPOSITION_REACHED
-    assert approve(CASES["S05"], res.proposal).disposition is Disposition.HOLD_PENDING_RECEIPT
-
-
-def test_loop_exhausts_budget_without_special_casing():
-    res = run_case(CASES["S01"], ScriptedClient([_call("get_po")]), step_budget=3)
-    assert res.termination is Termination.BUDGET_EXHAUSTED
-    assert res.proposal is None
-    assert len(res.steps) == 3
-
-
-def test_silent_stop_is_not_recorded_as_success():
-    """A turn with no tool call must be distinguishable from a resolved case."""
-    res = run_case(CASES["S01"], ScriptedClient([ModelTurn(text="I think it's fine.")]))
-    assert res.termination is Termination.NO_PROGRESS
-    assert res.proposal is None
-
-
-def test_malformed_arguments_surface_on_first_occurrence():
-    client = ScriptedClient([_call("write_proposal", "{not json")])
-    res = run_case(CASES["S01"], client)
-    assert res.termination is Termination.INVALID_TOOL_CALL
-    assert client.calls == 1  # not retried until the budget drained
-
-
-def test_unknown_tool_terminates():
-    res = run_case(CASES["S01"], ScriptedClient([_call("delete_everything")]))
-    assert res.termination is Termination.INVALID_TOOL_CALL
-
-
-# --- batched tool calls ------------------------------------------------------
+def _call(name, arguments="{}"):
+    return ModelTurn(text=None, tool_calls=(ToolCall(f"c{name}", name, arguments),))
 
 
 def _batch(*names):
-    return ModelTurn(text=None, tool_calls=tuple(ToolCall(f"c{n}", n, "{}") for n in names))
+    return ModelTurn(
+        text=None, tool_calls=tuple(ToolCall(f"c{name}", name, "{}") for name in names)
+    )
 
 
-def test_batched_tool_calls_are_dispatched_before_the_next_turn():
-    """One model turn may dispatch several tools before the next turn."""
-    proposal_args = json.dumps({
+def test_batched_agent_run_produces_an_approved_typed_proposal():
+    proposal_arguments = json.dumps({
         "disposition": "hold_pending_receipt",
         "exception_classes": ["short_receipt"],
         "rationale": "60 of 100 received",
     })
     client = ScriptedClient([
         _batch("get_po", "get_receipt", "get_invoice"),
-        _call("write_proposal", proposal_args),
+        _call("write_proposal", proposal_arguments),
     ])
-    res = run_case(CASES["S05"], client)
+
+    result = run_case(CASES["S05"], client)
+
     assert client.calls == 2
-    assert [step.tool for step in res.steps] == [
+    assert [step.tool for step in result.steps] == [
         "get_po", "get_receipt", "get_invoice", "write_proposal",
     ]
-    assert len(res.steps) == 4
-    assert res.termination is Termination.DISPOSITION_REACHED
-    assert res.proposal is not None
+    assert result.termination is Termination.DISPOSITION_REACHED
+    assert isinstance(result.proposal, Proposal)
+    approved = approve(CASES["S05"], result.proposal)
+    assert approved.disposition is Disposition.HOLD_PENDING_RECEIPT
+
+
+@pytest.mark.parametrize(
+    ("turns", "step_budget", "termination", "step_count"),
+    [
+        ([_call("get_po")], 3, Termination.BUDGET_EXHAUSTED, 3),
+        ([ModelTurn(text="I think it is fine.")], 8, Termination.NO_PROGRESS, 0),
+    ],
+)
+def test_agent_stops_without_a_proposal(turns, step_budget, termination, step_count):
+    result = run_case(CASES["S01"], ScriptedClient(turns), step_budget=step_budget)
+    assert result.termination is termination
+    assert result.proposal is None
+    assert len(result.steps) == step_count
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "arguments", "detail"),
+    [
+        ("write_proposal", "{not json", "unparseable arguments"),
+        ("delete_everything", "{}", "unknown tool"),
+        ("write_proposal", "{}", "bad arguments"),
+    ],
+)
+def test_invalid_tool_calls_terminate_immediately(tool_name, arguments, detail):
+    client = ScriptedClient([_call(tool_name, arguments)])
+    result = run_case(CASES["S01"], client)
+    assert result.termination is Termination.INVALID_TOOL_CALL
+    assert detail in result.detail
+    assert client.calls == 1

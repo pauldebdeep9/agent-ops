@@ -1,0 +1,25 @@
+{
+  "scenario_id": "S09",
+  "actor": "pending_human_review",
+  "timestamp_utc": "2026-08-12T12:54:33.027391+00:00",
+  "disposition": "request_credit_memo",
+  "exception_classes": [
+    "quantity_over_invoiced",
+    "price_variance"
+  ],
+  "rationale": "The invoice includes 120 units while the PO only ordered 100 units, resulting in a quantity over-invoiced. Additionally, the invoiced unit price of $13.90 exceeds the PO unit price of $12.50 by $1.40, which is outside the acceptable tolerance.",
+  "trace_id": "613351c9886c",
+  "evidence": [
+    "get_po",
+    "get_receipt",
+    "get_invoice",
+    "compare_quantities",
+    "compare_prices",
+    "write_proposal"
+  ],
+  "verified_exception_classes": [
+    "price_variance",
+    "quantity_over_invoiced"
+  ],
+  "applied": false
+}

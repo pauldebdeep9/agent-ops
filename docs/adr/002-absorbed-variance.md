@@ -4,32 +4,26 @@
 
 ## Context
 
-`RELEASE_WITHIN_TOLERANCE` was in the disposition enum from the start. Writing
-`test_gold_dispositions_are_all_permitted` showed it was unreachable: a price
-variance inside tolerance raises no exception, an empty exception set permitted
-only `AUTO_MATCH` and `ESCALATE`, and so no case could ever legally be released
-within tolerance. The enum was hiding a state the model did not have.
+`RELEASE_WITHIN_TOLERANCE` requires information that an empty exception set alone
+cannot express. An empty set could mean either that every value matched exactly,
+or that a non-zero price difference was accepted by policy.
 
 ## Decision
 
-Distinguish three clean states rather than two:
+Distinguish three price states:
 
-| state | permitted |
+| State | Permitted dispositions |
 |---|---|
-| nothing differed | `AUTO_MATCH`, `ESCALATE` |
-| something differed, absorbed by tolerance | `RELEASE_WITHIN_TOLERANCE`, `ESCALATE` |
-| something differed, outside tolerance | governed by `ExceptionClass` |
+| Nothing differed | `AUTO_MATCH`, `ESCALATE` |
+| A difference was absorbed by tolerance | `RELEASE_WITHIN_TOLERANCE`, `ESCALATE` |
+| A difference exceeded tolerance | Governed by `ExceptionClass` |
 
-`absorbed_variance(case)` in `tools/match.py` computes the middle state. It is
-not an `ExceptionClass`, because it selects no remedy and requires no evidence
-beyond what the price comparison already returns.
+`absorbed_variance(case)` computes the middle state. It is not an
+`ExceptionClass`: it selects no corrective remedy and needs no evidence beyond
+the deterministic price comparison.
 
 ## Consequences
 
-The gate can now tell a clean match from an absorbed one, which is the difference
-between "nothing to look at" and "we chose not to pursue $20". In an audit that
-distinction is the whole point of having a tolerance policy at all.
-
-Found by a test asserting an invariant across the corpus rather than by review —
-consistent with P1, where the defects that mattered were invisible to every check
-that existed and obvious the moment output met ground truth.
+The gate can distinguish an exact match from a deliberate tolerance release.
+Without this state, `RELEASE_WITHIN_TOLERANCE` would be unreachable or an exact
+match could be mislabeled as a tolerated variance.
