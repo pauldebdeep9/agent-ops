@@ -14,7 +14,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from iscops.agent.client import ChatClient
 from iscops.approval.gate import Proposal
 from iscops.domain.records import MatchCase
 from iscops.domain.taxonomy import Disposition, ExceptionClass
@@ -72,7 +71,7 @@ class RunResult:
 
 
 def run_case(
-    case: MatchCase, client: ChatClient, step_budget: int = 8
+    case: MatchCase, client, step_budget: int = 8
 ) -> RunResult:
     trace_id = uuid.uuid4().hex[:12]
     observed: list[str] = []

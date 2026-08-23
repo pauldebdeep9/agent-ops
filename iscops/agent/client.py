@@ -4,8 +4,8 @@ No structured outputs, so no strict-mode schema hardening: tool calling accepts
 ordinary JSON Schema and validation happens on our side of the boundary.
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Protocol
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -19,13 +19,6 @@ class ToolCall:
 class ModelTurn:
     text: str | None
     tool_calls: tuple[ToolCall, ...] = ()
-    raw: dict[str, Any] = field(default_factory=dict)
-
-
-class ChatClient(Protocol):
-    def complete(
-        self, messages: list[dict[str, Any]], tools: list[dict[str, Any]]
-    ) -> ModelTurn: ...
 
 
 class OpenAIClient:

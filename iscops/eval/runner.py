@@ -12,7 +12,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import iscops.config as config
-from iscops.agent.client import ChatClient
 from iscops.agent.loop import RunResult, Termination, run_case
 from iscops.approval.gate import GateRejection, approve
 from iscops.corpus.scenarios import CASES, GOLD
@@ -103,7 +102,7 @@ def persist_run(
 
 
 def run_all(
-    client: ChatClient,
+    client,
     step_budget: int = 8,
     *,
     persist: bool = False,
