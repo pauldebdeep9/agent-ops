@@ -1,5 +1,0 @@
-{
-  "scenario_id": "S06",
-  "trace_id": "460646b6bd95",
-  "reason": "claimed exceptions ['price_variance', 'uom_mismatch'] do not match verified ['uom_mismatch']"
-}

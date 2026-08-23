@@ -1,5 +1,0 @@
-{
-  "scenario_id": "S11",
-  "trace_id": "51098ddc770a",
-  "reason": "claimed exceptions ['part_not_on_po'] do not match verified ['part_not_on_po', 'short_receipt']"
-}
