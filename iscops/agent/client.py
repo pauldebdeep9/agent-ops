@@ -1,8 +1,4 @@
-"""Minimal chat client. ~50 lines, written rather than imported.
-
-No structured outputs, so no strict-mode schema hardening: tool calling accepts
-ordinary JSON Schema and validation happens on our side of the boundary.
-"""
+"""Thin OpenAI tool-calling client with normalized responses."""
 
 from dataclasses import dataclass
 from typing import Any
@@ -22,13 +18,12 @@ class ModelTurn:
 
 
 class OpenAIClient:
-    """Thin wrapper. Deliberately not a retry/backoff layer — a transport failure
-    should surface as a failure, not as a quiet extra step against the budget."""
+    """OpenAI adapter; transport errors propagate to the caller."""
 
     def __init__(self, model: str = "gpt-4o-mini", temperature: float = 0.0) -> None:
-        from openai import OpenAI  # imported lazily so the rest of the repo
+        from openai import OpenAI
 
-        self._client = OpenAI()  # runs without the SDK installed
+        self._client = OpenAI()
         self.model = model
         self.temperature = temperature
         self.prompt_tokens = 0

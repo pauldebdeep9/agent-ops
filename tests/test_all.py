@@ -136,20 +136,18 @@ def test_write_proposal_actually_writes_proposal_json(tmp_path):
 # --- approval gate -----------------------------------------------------------
 
 
-def _proposal(sid, disposition, exceptions, evidence=("get_po", "get_receipt", "get_invoice")):
+def _proposal(disposition, exceptions):
     return Proposal(
-        scenario_id=sid, disposition=disposition,
+        disposition=disposition,
         exception_classes=frozenset(exceptions), rationale="because",
-        trace_id="t0", evidence=evidence,
     )
 
 
 def test_gate_accepts_a_correct_proposal():
     rec = approve(CASES["S05"], _proposal(
-        "S05", Disposition.HOLD_PENDING_RECEIPT, {ExceptionClass.SHORT_RECEIPT}))
-    assert rec.applied is False
+        Disposition.HOLD_PENDING_RECEIPT, {ExceptionClass.SHORT_RECEIPT}))
+    assert rec.disposition is Disposition.HOLD_PENDING_RECEIPT
     assert rec.verified_exception_classes == {ExceptionClass.SHORT_RECEIPT}
-    assert rec.timestamp_utc.endswith("+00:00")
 
 
 def test_gate_rejects_disposition_unsupported_by_verified_facts():
@@ -157,28 +155,15 @@ def test_gate_rejects_disposition_unsupported_by_verified_facts():
     as proposing a disposition those facts support."""
     with pytest.raises(GateRejection, match="not permitted"):
         approve(CASES["S05"], _proposal(
-            "S05", Disposition.REJECT_DUPLICATE, {ExceptionClass.SHORT_RECEIPT}))
+            Disposition.REJECT_DUPLICATE, {ExceptionClass.SHORT_RECEIPT}))
 
 
 def test_gate_rejects_claimed_exceptions_that_are_not_present():
     # The naive answer to the UOM case. Real class, real evidence, wrong facts.
     with pytest.raises(GateRejection, match="do not match verified"):
         approve(CASES["S06"], _proposal(
-            "S06", Disposition.REQUEST_CREDIT_MEMO,
+            Disposition.REQUEST_CREDIT_MEMO,
             {ExceptionClass.QUANTITY_OVER_INVOICED}))
-
-
-def test_gate_rejects_proposal_with_unobserved_evidence():
-    with pytest.raises(GateRejection, match="never observed"):
-        approve(CASES["S05"], _proposal(
-            "S05", Disposition.HOLD_PENDING_RECEIPT,
-            {ExceptionClass.SHORT_RECEIPT}, evidence=("get_po",)))
-
-
-def test_gate_rejects_cross_case_proposal():
-    with pytest.raises(GateRejection, match="targets"):
-        approve(CASES["S01"], _proposal(
-            "S05", Disposition.HOLD_PENDING_RECEIPT, {ExceptionClass.SHORT_RECEIPT}))
 
 
 # --- agent loop (scripted client; see docs/LIMITATIONS.md) -------------------

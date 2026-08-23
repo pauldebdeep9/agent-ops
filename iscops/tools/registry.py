@@ -65,16 +65,13 @@ def build_registry(
     """One registry per case. The case is closed over rather than passed as a
     tool argument, so the agent cannot address a different case by accident.
 
-    trace_id and observed exist so write_proposal can record what it needs to:
-    which run it belongs to, and what evidence preceded it. observed is the
-    same list the loop uses for Proposal.evidence -- tools append their own
-    name on call, rather than the loop tracking dispatch separately.
+    trace_id and observed let write_proposal persist its run identifier and the
+    evidence recorded by the dispatcher.
     """
     if observed is None:
         observed = []
 
     def get_po() -> dict[str, Any]:
-        observed.append("get_po")
         return {
             "po_number": case.purchase_order.po_number,
             "supplier": case.purchase_order.supplier,
@@ -93,7 +90,6 @@ def build_registry(
         }
 
     def get_receipt() -> dict[str, Any]:
-        observed.append("get_receipt")
         return {
             "receipt_number": case.goods_receipt.receipt_number,
             "line_count": len(case.goods_receipt.lines),
@@ -109,7 +105,6 @@ def build_registry(
         }
 
     def get_invoice() -> dict[str, Any]:
-        observed.append("get_invoice")
         return {
             "invoice_id": case.invoice.invoice_id,
             "supplier_invoice_number": case.invoice.supplier_invoice_number,
@@ -129,7 +124,6 @@ def build_registry(
         }
 
     def compare_quantities() -> dict[str, Any]:
-        observed.append("compare_quantities")
         po_by = {ln.line_number: ln for ln in case.purchase_order.lines}
         rc_by = {ln.po_line_number: ln for ln in case.goods_receipt.lines}
         rows = []
@@ -155,7 +149,6 @@ def build_registry(
         return {"lines": rows}
 
     def compare_prices() -> dict[str, Any]:
-        observed.append("compare_prices")
         po_by = {ln.line_number: ln for ln in case.purchase_order.lines}
         rows = []
         for inv in case.invoice.lines:
@@ -183,11 +176,7 @@ def build_registry(
     def write_proposal(
         disposition: str, exception_classes: list[str], rationale: str
     ) -> dict[str, Any]:
-        # The gate, not this tool, decides whether the proposal is admissible.
-        # This writes what the agent claimed, unvalidated -- the raw attempt,
-        # which is what "as submitted" means. Validation and evidence-checked
-        # approval/rejection are the gate's job, recorded separately.
-        observed.append("write_proposal")
+        # Record the raw claim; the gate validates it separately.
         run_dir = config.RUNS_DIR / trace_id
         run_dir.mkdir(parents=True, exist_ok=True)
         (run_dir / "proposal.json").write_text(json.dumps({

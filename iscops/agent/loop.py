@@ -1,12 +1,4 @@
-"""The agent loop: a while over tool dispatch. No framework.
-
-Termination is an enum, never a boolean. The failure this guards against is
-silent termination — the model stops calling tools, the loop exits, and the run
-records as complete with no disposition, indistinguishable in the results from a
-case genuinely resolved. That is the same shape as P1's auto_accept_error_rate,
-where the failure most likely to go unnoticed was structurally excluded from the
-metric meant to catch it.
-"""
+"""Explicit tool-calling loop with distinct termination states."""
 
 import json
 import uuid
@@ -63,7 +55,6 @@ class RunResult:
     termination: Termination
     steps: list[Step] = field(default_factory=list)
     proposal: Proposal | None = None
-    tools_observed: tuple[str, ...] = ()
     detail: str | None = None
     #: Turns (LLM API calls) actually made, out of step_budget. Not the same
     #: as len(steps): a turn can dispatch several tool calls at once.
@@ -76,7 +67,6 @@ def run_case(
     trace_id = uuid.uuid4().hex[:12]
     observed: list[str] = []
     registry = build_registry(case, trace_id, observed)
-    schemas = TOOL_SCHEMAS
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": SYSTEM},
         {"role": "user", "content": f"Resolve case {case.scenario_id}."},
@@ -84,7 +74,7 @@ def run_case(
     result = RunResult(case.scenario_id, trace_id, Termination.BUDGET_EXHAUSTED)
 
     for i in range(step_budget):
-        turn = client.complete(messages, schemas)
+        turn = client.complete(messages, TOOL_SCHEMAS)
         result.turns_consumed = i + 1
 
         if not turn.tool_calls:
@@ -121,6 +111,7 @@ def run_case(
                 result.steps.append(Step(i, call.name, None, None, call.arguments[:200]))
                 return result
 
+            observed.append(call.name)
             try:
                 out = registry[call.name](**args)
             except TypeError as e:
@@ -139,14 +130,11 @@ def run_case(
             if call.name == "write_proposal":
                 try:
                     proposal = Proposal(
-                        scenario_id=case.scenario_id,
                         disposition=Disposition(args["disposition"]),
                         exception_classes=frozenset(
                             ExceptionClass(c) for c in args["exception_classes"]
                         ),
                         rationale=args["rationale"],
-                        trace_id=trace_id,
-                        evidence=tuple(dict.fromkeys(observed)),
                     )
                 except (ValueError, KeyError) as e:
                     result.termination = Termination.INVALID_TOOL_CALL
@@ -154,8 +142,6 @@ def run_case(
                     return result
                 result.proposal = proposal
                 result.termination = Termination.DISPOSITION_REACHED
-                result.tools_observed = proposal.evidence
                 return result
 
-    result.tools_observed = tuple(dict.fromkeys(observed))
     return result  # BUDGET_EXHAUSTED, set at construction. No special case.
