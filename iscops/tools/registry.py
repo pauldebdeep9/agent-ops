@@ -1,7 +1,7 @@
 """Tool protocol, registry, and the six tools.
 
 Every tool returns structured data, never prose. Exactly one tool is not
-read-only. That invariant is one assertion (see tests/test_tools.py) and it is
+read-only. That invariant is one assertion (see tests/test_all.py) and it is
 the enforceable form of "this agent does not move money".
 
 Schemas are hand-written dicts rather than generated from Pydantic. Tool calling
@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 import iscops.config as config
 from iscops.domain.records import MatchCase
-from iscops.tools.match import uom_factor
+from iscops.tools.match import po_line_for, received_by_po_line, uom_factor
 
 
 @dataclass(frozen=True)
@@ -118,12 +118,11 @@ def build_registry(
 
     def compare_quantities() -> dict[str, Any]:
         observed.append("compare_quantities")
-        po_by = {ln.line_number: ln for ln in case.purchase_order.lines}
-        rc_by = {ln.po_line_number: ln for ln in case.goods_receipt.lines}
+        received = received_by_po_line(case)
         rows = []
         for inv in case.invoice.lines:
-            po = po_by.get(inv.po_line_number) if inv.po_line_number else None
-            rc = rc_by.get(inv.po_line_number) if inv.po_line_number else None
+            po = po_line_for(case, inv)
+            rc = received.get(inv.po_line_number) if po else None
             rows.append({
                 "invoice_line": inv.line_number,
                 "po_line": inv.po_line_number,
@@ -132,7 +131,7 @@ def build_registry(
                 "invoiced_uom": inv.uom,
                 "ordered": _s(po.quantity) if po else None,
                 "ordered_uom": po.uom if po else None,
-                "received": _s(rc.quantity_received) if rc else "0",
+                "received": _s(rc) if rc is not None else "0",
                 "uom_conversion_factor": (
                     _s(f)
                     if po
@@ -144,10 +143,9 @@ def build_registry(
 
     def compare_prices() -> dict[str, Any]:
         observed.append("compare_prices")
-        po_by = {ln.line_number: ln for ln in case.purchase_order.lines}
         rows = []
         for inv in case.invoice.lines:
-            po = po_by.get(inv.po_line_number) if inv.po_line_number else None
+            po = po_line_for(case, inv)
             if po is None:
                 rows.append({
                     "invoice_line": inv.line_number,

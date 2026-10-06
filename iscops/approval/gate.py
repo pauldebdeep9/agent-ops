@@ -13,12 +13,17 @@ agent's account of them.
 """
 
 from datetime import datetime, timezone
+from enum import Enum
 
 from pydantic import BaseModel, ConfigDict
 
 from iscops.domain.records import MatchCase
-from iscops.domain.taxonomy import Disposition, ExceptionClass, permitted_for
-from iscops.tools.match import absorbed_variance, detect_exceptions
+from iscops.domain.taxonomy import Disposition, ExceptionClass
+from iscops.tools.match import (
+    detect_exceptions,
+    escalate_only_states,
+    permitted_dispositions,
+)
 
 
 class Proposal(BaseModel):
@@ -33,8 +38,21 @@ class Proposal(BaseModel):
     evidence: tuple[str, ...]
 
 
+class RejectionCode(str, Enum):
+    """Which condition failed. Declared in the order approve() checks them, so a
+    proposal that breaks several is reported under the first."""
+
+    WRONG_CASE = "wrong_case"
+    EVIDENCE_MISSING = "evidence_missing"
+    EXCEPTIONS_MISMATCH = "exceptions_mismatch"
+    DISPOSITION_NOT_PERMITTED = "disposition_not_permitted"
+    RATIONALE_EMPTY = "rationale_empty"
+
+
 class GateRejection(Exception):
-    pass
+    def __init__(self, code: RejectionCode, message: str) -> None:
+        super().__init__(message)
+        self.code = code
 
 
 class ApprovalRecord(BaseModel):
@@ -64,12 +82,16 @@ def approve(
 
     if proposal.scenario_id != case.scenario_id:
         raise GateRejection(
-            f"proposal targets {proposal.scenario_id}, case is {case.scenario_id}"
+            RejectionCode.WRONG_CASE,
+            f"proposal targets {proposal.scenario_id}, case is {case.scenario_id}",
         )
 
     missing = [t for t in REQUIRED_EVIDENCE if t not in proposal.evidence]
     if missing:
-        raise GateRejection(f"evidence never observed: {', '.join(missing)}")
+        raise GateRejection(
+            RejectionCode.EVIDENCE_MISSING,
+            f"evidence never observed: {', '.join(missing)}",
+        )
 
     verified = detect_exceptions(case)
 
@@ -79,19 +101,23 @@ def approve(
         claimed = sorted(c.value for c in proposal.exception_classes) or ["<none>"]
         actual = sorted(c.value for c in verified) or ["<none>"]
         raise GateRejection(
-            f"claimed exceptions {claimed} do not match verified {actual}"
+            RejectionCode.EXCEPTIONS_MISMATCH,
+            f"claimed exceptions {claimed} do not match verified {actual}",
         )
 
-    allowed = permitted_for(verified, absorbed_variance(case))
+    allowed = permitted_dispositions(case)
     if proposal.disposition not in allowed:
+        forced = sorted(s.value for s in escalate_only_states(case))
         raise GateRejection(
+            RejectionCode.DISPOSITION_NOT_PERMITTED,
             f"disposition {proposal.disposition.value} not permitted given "
             f"{sorted(c.value for c in verified) or ['<none>']}; "
             f"allowed: {sorted(d.value for d in allowed)}"
+            + (f"; escalate only: {forced}" if forced else ""),
         )
 
     if not proposal.rationale.strip():
-        raise GateRejection("rationale is empty")
+        raise GateRejection(RejectionCode.RATIONALE_EMPTY, "rationale is empty")
 
     return ApprovalRecord(
         scenario_id=case.scenario_id,

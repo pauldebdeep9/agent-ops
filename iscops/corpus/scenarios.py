@@ -35,6 +35,13 @@ class Gold(BaseModel):
     exceptions: frozenset[ExceptionClass]
     disposition: Disposition
     rationale: str
+    #: Dispositions a reviewer would accept besides the preferred one. Empty for
+    #: all twelve scenarios: each has one right answer. See docs/adr/003.
+    also_acceptable: frozenset[Disposition] = frozenset()
+
+    @property
+    def acceptable(self) -> frozenset[Disposition]:
+        return self.also_acceptable | {self.disposition}
 
 
 def _case(
