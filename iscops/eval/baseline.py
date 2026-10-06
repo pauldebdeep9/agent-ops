@@ -8,8 +8,7 @@ baseline disagrees with gold, an agent failure tells you nothing.
 """
 
 from iscops.corpus.scenarios import CASES, GOLD
-from iscops.domain.taxonomy import permitted_for
-from iscops.tools.match import absorbed_variance, detect_exceptions
+from iscops.tools.match import detect_exceptions, permitted_dispositions
 
 
 def main() -> None:
@@ -19,7 +18,7 @@ def main() -> None:
     for sid, case in CASES.items():
         found = detect_exceptions(case)
         gold = GOLD[sid]
-        allowed = permitted_for(found, absorbed_variance(case))
+        allowed = permitted_dispositions(case)
         ok = found == gold.exceptions and gold.disposition in allowed
         agree += ok
         print(

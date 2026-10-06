@@ -27,7 +27,8 @@ class ExceptionClass(str, Enum):
     factor. Looks exactly like large over-invoicing; it is a data problem."""
 
     PART_NOT_ON_PO = "part_not_on_po"
-    """Invoice line references no PO line, or a part number absent from the PO."""
+    """Invoice line cites no PO line, cites one the PO does not have, or cites
+    one that ordered a different part."""
 
     DUPLICATE_INVOICE = "duplicate_invoice"
     """Supplier invoice number already seen against the same PO."""
@@ -43,23 +44,27 @@ class Disposition(str, Enum):
     ESCALATE = "escalate"
 
 
+#: Dispositions that let the invoice go forward to payment. Every other
+#: disposition stops it until a person or the supplier acts.
+RELEASING: frozenset[Disposition] = frozenset({
+    Disposition.AUTO_MATCH,
+    Disposition.RELEASE_WITHIN_TOLERANCE,
+})
+
 #: Which dispositions each exception class permits. ESCALATE is always permitted:
-#: an agent may always decline to decide.
+#: an agent may always decline to decide. No class permits a RELEASING
+#: disposition: an open exception never lets the invoice through.
 PERMITTED: dict[ExceptionClass, frozenset[Disposition]] = {
     ExceptionClass.PRICE_VARIANCE: frozenset({
-        Disposition.RELEASE_WITHIN_TOLERANCE,
         Disposition.REQUEST_CREDIT_MEMO,
-        Disposition.REQUEST_PO_AMENDMENT,
         Disposition.ESCALATE,
     }),
     ExceptionClass.QUANTITY_OVER_INVOICED: frozenset({
         Disposition.REQUEST_CREDIT_MEMO,
-        Disposition.HOLD_PENDING_RECEIPT,
         Disposition.ESCALATE,
     }),
     ExceptionClass.SHORT_RECEIPT: frozenset({
         Disposition.HOLD_PENDING_RECEIPT,
-        Disposition.REQUEST_CREDIT_MEMO,
         Disposition.ESCALATE,
     }),
     ExceptionClass.UOM_MISMATCH: frozenset({
@@ -68,7 +73,6 @@ PERMITTED: dict[ExceptionClass, frozenset[Disposition]] = {
     }),
     ExceptionClass.PART_NOT_ON_PO: frozenset({
         Disposition.REQUEST_PO_AMENDMENT,
-        Disposition.REQUEST_CREDIT_MEMO,
         Disposition.ESCALATE,
     }),
     ExceptionClass.DUPLICATE_INVOICE: frozenset({
@@ -93,18 +97,58 @@ CLEAN_ABSORBED: frozenset[Disposition] = frozenset({
 })
 
 
+class EscalateOnly(str, Enum):
+    """States in which no remedy is supportable.
+
+    Like an absorbed variance, these are computed from the case and never
+    claimed by the agent, so they are not exception classes (ADR-002, ADR-003).
+    """
+
+    UNDER_BILLED = "under_billed"
+    """A unit price is below the PO price by more than tolerance. Every price
+    remedy assumes the supplier overcharged."""
+
+    PO_NUMBER_MISMATCH = "po_number_mismatch"
+    """The invoice or the receipt cites a different PO from the one in the case.
+    The three documents are not about the same order."""
+
+    CURRENCY_MISMATCH = "currency_mismatch"
+    """Invoice and PO are in different currencies. No price comparison between
+    them means anything."""
+
+    SUPPLIER_MISMATCH = "supplier_mismatch"
+    """The invoice is from a different supplier than the PO was placed with."""
+
+    RECEIPT_MISMATCH = "receipt_mismatch"
+    """A receipt line cites a PO line the PO does not have, or records a
+    different part or unit of measure from the one ordered. It is not evidence
+    that the ordered goods arrived."""
+
+
+#: What any EscalateOnly state leaves permitted.
+ESCALATE_ONLY: frozenset[Disposition] = frozenset({Disposition.ESCALATE})
+
+
 def permitted_for(
-    classes: frozenset[ExceptionClass], absorbed_variance: bool = False
+    classes: frozenset[ExceptionClass],
+    absorbed_variance: bool = False,
+    escalate_only: bool = False,
 ) -> frozenset[Disposition]:
     """Dispositions permitted given the exceptions actually found.
 
     Intersection, not union: with two exceptions open, only a disposition that
     both permit is valid. This is what makes a blocking exception dominate a
-    releasable one.
+    releasable one. An EscalateOnly state intersects the same way.
+
+    Call it through tools.match.permitted_dispositions(case), which works the
+    two flags out from the case. Nothing else in iscops may call it directly.
     """
     if not classes:
-        return CLEAN_ABSORBED if absorbed_variance else CLEAN_EXACT
-    out = set(Disposition)
-    for c in classes:
-        out &= PERMITTED[c]
+        out = set(CLEAN_ABSORBED if absorbed_variance else CLEAN_EXACT)
+    else:
+        out = set(Disposition)
+        for c in classes:
+            out &= PERMITTED[c]
+    if escalate_only:
+        out &= ESCALATE_ONLY
     return frozenset(out)

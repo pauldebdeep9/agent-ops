@@ -68,8 +68,8 @@ def test_permitted_intersects_rather_than_unions():
     both = permitted_for(frozenset({
         ExceptionClass.QUANTITY_OVER_INVOICED, ExceptionClass.PRICE_VARIANCE
     }))
-    # release_within_tolerance is fine for a price variance alone; it must not
-    # survive once an over-invoiced quantity is also open.
+    # No exception class permits a releasing disposition, alone or combined
+    # (docs/adr/003). The intersection is what leaves credit memo standing.
     assert Disposition.RELEASE_WITHIN_TOLERANCE not in both
     assert Disposition.REQUEST_CREDIT_MEMO in both
     assert permitted_for(frozenset()) == CLEAN_EXACT

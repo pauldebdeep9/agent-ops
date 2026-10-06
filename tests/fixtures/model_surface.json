@@ -1,0 +1,1117 @@
+{
+ "payloads": {
+  "S01": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "0.00",
+      "extended_amounts_agree": true,
+      "invoice_line": 1,
+      "invoiced_extended": "1250.00",
+      "invoiced_unit_price": "12.50",
+      "on_po": true,
+      "po_extended": "1250.00",
+      "po_unit_price": "12.50"
+     },
+     {
+      "delta": "0.00",
+      "extended_amounts_agree": true,
+      "invoice_line": 2,
+      "invoiced_extended": "150.00",
+      "invoiced_unit_price": "3.75",
+      "on_po": true,
+      "po_extended": "150.00",
+      "po_unit_price": "3.75"
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "100",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "100",
+      "ordered_uom": "EA",
+      "po_line": 1,
+      "received": "100",
+      "uom_conversion_factor": null
+     },
+     {
+      "invoice_line": 2,
+      "invoiced": "40",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "40",
+      "ordered_uom": "EA",
+      "po_line": 2,
+      "received": "40",
+      "uom_conversion_factor": null
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S01",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     },
+     {
+      "extended": "150.00",
+      "line_number": 2,
+      "part_number": "SEA-2210",
+      "po_line_number": 2,
+      "quantity": "40",
+      "unit_price": "3.75",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [],
+    "supplier_invoice_number": "SIN-0001"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     },
+     {
+      "extended": "150.00",
+      "line_number": 2,
+      "part_number": "SEA-2210",
+      "quantity": "40",
+      "unit_price": "3.75",
+      "uom": "EA"
+     }
+    ],
+    "po_number": "PO-S01",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 2,
+    "lines": [
+     {
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity_received": "100",
+      "uom": "EA"
+     },
+     {
+      "part_number": "SEA-2210",
+      "po_line_number": 2,
+      "quantity_received": "40",
+      "uom": "EA"
+     }
+    ],
+    "receipt_number": "GR-S01"
+   }
+  },
+  "S02": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "0.20",
+      "extended_amounts_agree": false,
+      "invoice_line": 1,
+      "invoiced_extended": "1270.00",
+      "invoiced_unit_price": "12.70",
+      "on_po": true,
+      "po_extended": "1250.00",
+      "po_unit_price": "12.50"
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "100",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "100",
+      "ordered_uom": "EA",
+      "po_line": 1,
+      "received": "100",
+      "uom_conversion_factor": null
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S02",
+    "lines": [
+     {
+      "extended": "1270.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "100",
+      "unit_price": "12.70",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [],
+    "supplier_invoice_number": "SIN-0001"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "po_number": "PO-S02",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 1,
+    "lines": [
+     {
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity_received": "100",
+      "uom": "EA"
+     }
+    ],
+    "receipt_number": "GR-S02"
+   }
+  },
+  "S03": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "1.20",
+      "extended_amounts_agree": false,
+      "invoice_line": 1,
+      "invoiced_extended": "1370.00",
+      "invoiced_unit_price": "13.70",
+      "on_po": true,
+      "po_extended": "1250.00",
+      "po_unit_price": "12.50"
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "100",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "100",
+      "ordered_uom": "EA",
+      "po_line": 1,
+      "received": "100",
+      "uom_conversion_factor": null
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S03",
+    "lines": [
+     {
+      "extended": "1370.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "100",
+      "unit_price": "13.70",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [],
+    "supplier_invoice_number": "SIN-0001"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "po_number": "PO-S03",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 1,
+    "lines": [
+     {
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity_received": "100",
+      "uom": "EA"
+     }
+    ],
+    "receipt_number": "GR-S03"
+   }
+  },
+  "S04": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "0.00",
+      "extended_amounts_agree": false,
+      "invoice_line": 1,
+      "invoiced_extended": "1500.00",
+      "invoiced_unit_price": "12.50",
+      "on_po": true,
+      "po_extended": "1250.00",
+      "po_unit_price": "12.50"
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "120",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "100",
+      "ordered_uom": "EA",
+      "po_line": 1,
+      "received": "100",
+      "uom_conversion_factor": null
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S04",
+    "lines": [
+     {
+      "extended": "1500.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "120",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [],
+    "supplier_invoice_number": "SIN-0001"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "po_number": "PO-S04",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 1,
+    "lines": [
+     {
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity_received": "100",
+      "uom": "EA"
+     }
+    ],
+    "receipt_number": "GR-S04"
+   }
+  },
+  "S05": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "0.00",
+      "extended_amounts_agree": true,
+      "invoice_line": 1,
+      "invoiced_extended": "1250.00",
+      "invoiced_unit_price": "12.50",
+      "on_po": true,
+      "po_extended": "1250.00",
+      "po_unit_price": "12.50"
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "100",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "100",
+      "ordered_uom": "EA",
+      "po_line": 1,
+      "received": "60",
+      "uom_conversion_factor": null
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S05",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [],
+    "supplier_invoice_number": "SIN-0001"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "po_number": "PO-S05",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 1,
+    "lines": [
+     {
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity_received": "60",
+      "uom": "EA"
+     }
+    ],
+    "receipt_number": "GR-S05"
+   }
+  },
+  "S06": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "-137.50",
+      "extended_amounts_agree": true,
+      "invoice_line": 1,
+      "invoiced_extended": "1500.00",
+      "invoiced_unit_price": "12.50",
+      "on_po": true,
+      "po_extended": "1500.00",
+      "po_unit_price": "150.00"
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "120",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "10",
+      "ordered_uom": "CS",
+      "po_line": 1,
+      "received": "10",
+      "uom_conversion_factor": "12"
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S06",
+    "lines": [
+     {
+      "extended": "1500.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "120",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [],
+    "supplier_invoice_number": "SIN-0001"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1500.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "10",
+      "unit_price": "150.00",
+      "uom": "CS"
+     }
+    ],
+    "po_number": "PO-S06",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 1,
+    "lines": [
+     {
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity_received": "10",
+      "uom": "CS"
+     }
+    ],
+    "receipt_number": "GR-S06"
+   }
+  },
+  "S07": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "0.00",
+      "extended_amounts_agree": true,
+      "invoice_line": 1,
+      "invoiced_extended": "1250.00",
+      "invoiced_unit_price": "12.50",
+      "on_po": true,
+      "po_extended": "1250.00",
+      "po_unit_price": "12.50"
+     },
+     {
+      "invoice_line": 2,
+      "invoiced_unit_price": "220.00",
+      "on_po": false
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "100",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "100",
+      "ordered_uom": "EA",
+      "po_line": 1,
+      "received": "100",
+      "uom_conversion_factor": null
+     },
+     {
+      "invoice_line": 2,
+      "invoiced": "1",
+      "invoiced_uom": "EA",
+      "on_po": false,
+      "ordered": null,
+      "ordered_uom": null,
+      "po_line": null,
+      "received": "0",
+      "uom_conversion_factor": null
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S07",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     },
+     {
+      "extended": "220.00",
+      "line_number": 2,
+      "part_number": "FRT-EXP",
+      "po_line_number": null,
+      "quantity": "1",
+      "unit_price": "220.00",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [],
+    "supplier_invoice_number": "SIN-0001"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "po_number": "PO-S07",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 1,
+    "lines": [
+     {
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity_received": "100",
+      "uom": "EA"
+     }
+    ],
+    "receipt_number": "GR-S07"
+   }
+  },
+  "S08": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "0.00",
+      "extended_amounts_agree": true,
+      "invoice_line": 1,
+      "invoiced_extended": "1250.00",
+      "invoiced_unit_price": "12.50",
+      "on_po": true,
+      "po_extended": "1250.00",
+      "po_unit_price": "12.50"
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "100",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "100",
+      "ordered_uom": "EA",
+      "po_line": 1,
+      "received": "100",
+      "uom_conversion_factor": null
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S08",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [
+     "SIN-8891"
+    ],
+    "supplier_invoice_number": "SIN-8891"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "po_number": "PO-S08",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 1,
+    "lines": [
+     {
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity_received": "100",
+      "uom": "EA"
+     }
+    ],
+    "receipt_number": "GR-S08"
+   }
+  },
+  "S09": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "1.40",
+      "extended_amounts_agree": false,
+      "invoice_line": 1,
+      "invoiced_extended": "1668.00",
+      "invoiced_unit_price": "13.90",
+      "on_po": true,
+      "po_extended": "1250.00",
+      "po_unit_price": "12.50"
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "120",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "100",
+      "ordered_uom": "EA",
+      "po_line": 1,
+      "received": "100",
+      "uom_conversion_factor": null
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S09",
+    "lines": [
+     {
+      "extended": "1668.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "120",
+      "unit_price": "13.90",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [],
+    "supplier_invoice_number": "SIN-0001"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "po_number": "PO-S09",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 1,
+    "lines": [
+     {
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity_received": "100",
+      "uom": "EA"
+     }
+    ],
+    "receipt_number": "GR-S09"
+   }
+  },
+  "S10": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "0.00",
+      "extended_amounts_agree": true,
+      "invoice_line": 1,
+      "invoiced_extended": "1250.00",
+      "invoiced_unit_price": "12.50",
+      "on_po": true,
+      "po_extended": "1250.00",
+      "po_unit_price": "12.50"
+     },
+     {
+      "delta": "0.00",
+      "extended_amounts_agree": true,
+      "invoice_line": 2,
+      "invoiced_extended": "150.00",
+      "invoiced_unit_price": "3.75",
+      "on_po": true,
+      "po_extended": "150.00",
+      "po_unit_price": "3.75"
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "100",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "100",
+      "ordered_uom": "EA",
+      "po_line": 1,
+      "received": "55",
+      "uom_conversion_factor": null
+     },
+     {
+      "invoice_line": 2,
+      "invoiced": "40",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "40",
+      "ordered_uom": "EA",
+      "po_line": 2,
+      "received": "40",
+      "uom_conversion_factor": null
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S10",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     },
+     {
+      "extended": "150.00",
+      "line_number": 2,
+      "part_number": "SEA-2210",
+      "po_line_number": 2,
+      "quantity": "40",
+      "unit_price": "3.75",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [],
+    "supplier_invoice_number": "SIN-0001"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     },
+     {
+      "extended": "150.00",
+      "line_number": 2,
+      "part_number": "SEA-2210",
+      "quantity": "40",
+      "unit_price": "3.75",
+      "uom": "EA"
+     }
+    ],
+    "po_number": "PO-S10",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 2,
+    "lines": [
+     {
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity_received": "55",
+      "uom": "EA"
+     },
+     {
+      "part_number": "SEA-2210",
+      "po_line_number": 2,
+      "quantity_received": "40",
+      "uom": "EA"
+     }
+    ],
+    "receipt_number": "GR-S10"
+   }
+  },
+  "S11": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "0.00",
+      "extended_amounts_agree": true,
+      "invoice_line": 1,
+      "invoiced_extended": "1250.00",
+      "invoiced_unit_price": "12.50",
+      "on_po": true,
+      "po_extended": "1250.00",
+      "po_unit_price": "12.50"
+     },
+     {
+      "invoice_line": 2,
+      "invoiced_unit_price": "480.00",
+      "on_po": false
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "100",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "100",
+      "ordered_uom": "EA",
+      "po_line": 1,
+      "received": "0",
+      "uom_conversion_factor": null
+     },
+     {
+      "invoice_line": 2,
+      "invoiced": "2",
+      "invoiced_uom": "EA",
+      "on_po": false,
+      "ordered": null,
+      "ordered_uom": null,
+      "po_line": null,
+      "received": "0",
+      "uom_conversion_factor": null
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S11",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     },
+     {
+      "extended": "960.00",
+      "line_number": 2,
+      "part_number": "TOOL-KIT",
+      "po_line_number": null,
+      "quantity": "2",
+      "unit_price": "480.00",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [],
+    "supplier_invoice_number": "SIN-0001"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "po_number": "PO-S11",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 0,
+    "lines": [],
+    "receipt_number": "GR-S11"
+   }
+  },
+  "S12": {
+   "compare_prices": {
+    "lines": [
+     {
+      "delta": "-1.50",
+      "extended_amounts_agree": false,
+      "invoice_line": 1,
+      "invoiced_extended": "1100.00",
+      "invoiced_unit_price": "11.00",
+      "on_po": true,
+      "po_extended": "1250.00",
+      "po_unit_price": "12.50"
+     }
+    ]
+   },
+   "compare_quantities": {
+    "lines": [
+     {
+      "invoice_line": 1,
+      "invoiced": "100",
+      "invoiced_uom": "EA",
+      "on_po": true,
+      "ordered": "100",
+      "ordered_uom": "EA",
+      "po_line": 1,
+      "received": "100",
+      "uom_conversion_factor": null
+     }
+    ]
+   },
+   "get_invoice": {
+    "invoice_id": "INV-S12",
+    "lines": [
+     {
+      "extended": "1100.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity": "100",
+      "unit_price": "11.00",
+      "uom": "EA"
+     }
+    ],
+    "prior_invoice_numbers_on_this_po": [],
+    "supplier_invoice_number": "SIN-0001"
+   },
+   "get_po": {
+    "currency": "USD",
+    "lines": [
+     {
+      "extended": "1250.00",
+      "line_number": 1,
+      "part_number": "BRG-6204",
+      "quantity": "100",
+      "unit_price": "12.50",
+      "uom": "EA"
+     }
+    ],
+    "po_number": "PO-S12",
+    "supplier": "Vantage Bearings Pte Ltd"
+   },
+   "get_receipt": {
+    "line_count": 1,
+    "lines": [
+     {
+      "part_number": "BRG-6204",
+      "po_line_number": 1,
+      "quantity_received": "100",
+      "uom": "EA"
+     }
+    ],
+    "receipt_number": "GR-S12"
+   }
+  }
+ },
+ "system": "You resolve purchase-order invoice exceptions by three-way match.\n\nCall tools to gather facts. Never compute from memory; the tools return exact\nfigures. When you have enough evidence, call write_proposal exactly once.\n\nException classes: price_variance, quantity_over_invoiced, short_receipt,\nuom_mismatch, part_not_on_po, duplicate_invoice.\n\nDispositions: auto_match, release_within_tolerance, request_credit_memo,\nhold_pending_receipt, request_po_amendment, reject_duplicate, escalate.\n\nRules:\n- Unit-price tolerance is 2% of the PO price, floored at $0.50. Inside it, no\n  price exception exists.\n- If invoice UOM differs from PO UOM and the extended amounts agree, this is\n  uom_mismatch, a data problem. It is not over-invoicing and no money is owed.\n- Choose escalate when the evidence does not support any remedy.\n- You propose. You never execute.",
+ "tool_schemas": [
+  {
+   "function": {
+    "description": "Retrieve the purchase order and its lines.",
+    "name": "get_po",
+    "parameters": {
+     "properties": {},
+     "required": [],
+     "type": "object"
+    }
+   },
+   "type": "function"
+  },
+  {
+   "function": {
+    "description": "Retrieve the goods receipt. May have zero lines.",
+    "name": "get_receipt",
+    "parameters": {
+     "properties": {},
+     "required": [],
+     "type": "object"
+    }
+   },
+   "type": "function"
+  },
+  {
+   "function": {
+    "description": "Retrieve the invoice and prior invoice numbers on this PO.",
+    "name": "get_invoice",
+    "parameters": {
+     "properties": {},
+     "required": [],
+     "type": "object"
+    }
+   },
+   "type": "function"
+  },
+  {
+   "function": {
+    "description": "Per-line ordered vs received vs invoiced, with UOM and any conversion factor.",
+    "name": "compare_quantities",
+    "parameters": {
+     "properties": {},
+     "required": [],
+     "type": "object"
+    }
+   },
+   "type": "function"
+  },
+  {
+   "function": {
+    "description": "Per-line PO vs invoiced unit price and extended amounts.",
+    "name": "compare_prices",
+    "parameters": {
+     "properties": {},
+     "required": [],
+     "type": "object"
+    }
+   },
+   "type": "function"
+  },
+  {
+   "function": {
+    "description": "Record a proposed disposition. Proposes only; nothing is executed.",
+    "name": "write_proposal",
+    "parameters": {
+     "properties": {
+      "disposition": {
+       "type": "string"
+      },
+      "exception_classes": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "rationale": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "disposition",
+      "exception_classes",
+      "rationale"
+     ],
+     "type": "object"
+    }
+   },
+   "type": "function"
+  }
+ ]
+}
