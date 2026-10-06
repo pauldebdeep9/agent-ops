@@ -30,7 +30,7 @@ This one changes nothing the model sees.
 | Reference, after | 190 tests; 22/5,376 admitted, 0 findings; 23/27 fields read, the other 4 identifiers; killed 166/167 |
 | Live eval, corpus growth | not started (features #2, #3) |
 | Dev/test env | `Sai2608` |
-| Branch | `feat/ga-gate-audit` off `main` |
+| Branch | `feat/ga-gate-audit` off `main`; merged after GA-09 |
 
 Every number in this document was produced by running code against `main` in a
 sandbox. Treat each as a prediction to reproduce on `Sai2608`, not as a result.
@@ -45,16 +45,33 @@ sandbox. Treat each as a prediction to reproduce on `Sai2608`, not as a result.
   shows the *end* state. Where an item's intermediate state differs from it
   (the ratchet lists in GA-01 and GA-08, `classify()` before GA-05, `CHECKS`
   growing one entry at a time), this document is the authority.
-- **Adopt mode.** `git am .ga-ref/ga-reference.patch` once, then run only the
-  prompts marked *adopt* — verify, fail-first, review — plus GA-09's prompts
-  4–6, which are measurements on your machine. About 15 prompts instead of 43.
-  The red-before-green runs (GA-04, GA-05, GA-07, GA-08) cannot happen
-  naturally in adopt mode; the item's fail-first list reproduces each one by
-  reverting the fix.
+- **Adopt mode.** In this order:
+  1. GA-00 prompt 1 — preflight, and this document committed
+  2. `git am .ga-ref/ga-reference.patch`
+  3. verify — `make test` 190 passed, `make baseline` 12/12,
+     `python -m iscops.eval.audit --strict` exits 0 with seven checks ok, and
+     the surface digest GA-00 states
+  4. the "before" mutation reading, against untouched `main`:
+     `git worktree add --detach .ga-ref/before fda9f00`, then
+     `python scripts/mutate.py --repo .ga-ref/before`, then
+     `git worktree remove .ga-ref/before`
 
-GA-00's two instruments are taken from the patch unchanged in **both** modes.
-Their readings on `main` are stated below; a rewritten instrument gives
-readings nobody has predicted.
+  After that run only the prompts marked *adopt* — verify, fail-first, review
+  — plus GA-09's prompts 4–6, which are measurements on your machine. About 15
+  prompts instead of 43. The red-before-green runs (GA-04, GA-05, GA-07, GA-08)
+  cannot happen naturally in adopt mode; the item's fail-first list reproduces
+  each one by reverting the fix. Where a fail-first names a ratchet list, read
+  it as the identity test that replaced it.
+
+GA-00's two instruments come from the patch unchanged in **both** modes. Build
+mode extracts them with `git apply --include` (prompts 2–3); adopt mode gets
+them from `git am`. **Never both:** once GA-00.2 and GA-00.3 are committed,
+`git am` stops on files that already exist. Their readings on `main` are stated
+below; a rewritten instrument gives readings nobody has predicted.
+
+**No merge into `main` before GA-09, in either mode.** After `git am` the code
+is ahead of README and LIMITATIONS, which still describe `main`: 27 tests, a
+currency that is never checked.
 
 The patch lives at `.ga-ref/ga-reference.patch`, excluded through
 `.git/info/exclude` so it is never committed. It applies the default for every
@@ -192,7 +209,10 @@ that survives means the suite ran against some other copy.
 `main` here differs from the tree the patch was built on. Find the difference
 first.
 
-**Patch** covers prompts 2–3 — both modes take them as is.
+**Patch** covers prompts 2–3. Build mode extracts the files as written above.
+Adopt mode skips both prompts: `git am` brings the files, the digest is checked
+after it, and the mutation reading is taken with `--repo` against a detached
+checkout of `fda9f00`.
 
 ---
 
@@ -772,4 +792,5 @@ Found while building the reference, deliberately left for a later feature:
 | Date | Item | Prompts | Note |
 |---|---|---|---|
 | 2026-10-06 | GA-00..09 reference patch | — | Built in a sandbox against `main@fda9f00`. 190 tests; readings identical under Python 3.11.17 and 3.13.16. Mutation 68/132 → 166/167 killed. Found while building: the engine never reads `part_number`; 15/27 fields unread; line splitting changes conclusions on 4/12 and 6/12. Not yet run on `Sai2608`. |
+| 2026-10-06 | adopt order corrected | — | The first version of this document said to commit GA-00's instruments and then `git am`. The patch creates those same files, so `git am` stops with "already exists in index" (reproduced). Adopt mode now applies the patch first and takes the before-reading with `--repo`. Also checked: re-running the patched gate on the 10 proposals stored under `runs/` (12 Aug) gives the same verdict on 10/10. |
 | | | | |
