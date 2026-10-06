@@ -1,6 +1,8 @@
 # ADR-003: A permission needs a witness, and some states permit only escalation
 
-**Status:** proposed — becomes accepted when GA-06 lands (docs/WBS-GA.md)
+**Status:** accepted
+
+D3–D11 taken as the reference patch's defaults. D5 and D6 confirmed on 2026-10-07.
 
 ## Context
 
