@@ -310,12 +310,17 @@ def contract_violations(cases: Mapping[str, MatchCase] = CASES) -> list[str]:
     for scenario_id, case in cases.items():
         other = next(sid for sid in scenario_ids if sid != scenario_id)
         disagreements = 0
+        checked = 0
         for proposal in full_proposal_space(case, other):
+            checked += 1
             got = actual_rejection(case, proposal)
             produced.add(got)
             disagreements += got != expected_rejection(case, proposal)
         if disagreements:
-            out.append(f"{scenario_id}: gate disagrees with its contract on {disagreements} proposals")
+            out.append(
+                f"{scenario_id}: gate disagrees with its contract on "
+                f"{disagreements}/{checked} proposals"
+            )
     out += [
         f"rejection code {code.value} is never produced"
         for code in RejectionCode
