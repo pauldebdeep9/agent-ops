@@ -415,7 +415,7 @@ fail-first.
 
 ---
 
-## GA-05 — A permitted remedy needs a witness ☐
+## GA-05 — A permitted remedy needs a witness ☒
 
 **Priority** critical · **~45 LOC** (+~20 test) · **Prompts** 4 · **Depends** GA-04 · **Stop** D5 before prompt 3
 
@@ -445,8 +445,9 @@ fail-first.
 - [ ] `witness_violations() == []`; `make baseline` 12/12 with S11 at
       `1 permitted`
 - [ ] Fail-first: put `request_credit_memo` back on `SHORT_RECEIPT` (witness
-      and ratchet red; the ratchet names S05, S10, S11); change S06's gold to
-      `escalate` (the UOM remedy loses its witness); remove
+      and ratchet red; the ratchet names S05 and S10 — S11 stays closed, it
+      needs `part_not_on_po → request_credit_memo` back as well); change S06's
+      gold to `escalate` (the UOM remedy loses its witness); remove
       `hold_pending_receipt` from `SHORT_RECEIPT` (gold unreachable on S05, S10)
 
 **Watch** D5 is a process-owner decision, not an engineering default. Each of
@@ -798,4 +799,5 @@ Found while building the reference, deliberately left for a later feature:
 | 2026-10-06 | GA-02 | adopt | 258,048 proposals checked (21,504 per scenario × 12), 0 disagreements; `tests/test_gate_contract.py` runs in 4.9 s (20 tests; slowest 1.91 s, the whole-corpus contract check). `contract_violations` now reports its denominator (`d2e5616`). Fail-first: A rationale check off — `test_all.py` 27 passed, contract 4/21504 on S01–S10 and 2/21504 on S11 and S12 (they permit only escalate), `rationale_empty` never produced; invisible to the 27 tests. B evidence check off — `test_all.py` 1 failed / 26 passed, contract 13 failed, 9408/21504 per scenario, `evidence_missing` never produced. C evidence check moved above the case check — `test_all.py` 27 passed, contract 13 failed, 9408/21504 per scenario reported under the wrong condition. Each restored; 20 passed. |
 | 2026-10-07 | GA-03 | adopt | Fail-first on `match.py`: A floor `0.50` → `0.25` — `test_tolerance.py` 3 failed / 11 passed, `check tolerance` 10 violated (PO 3.75 and 12.50, where the floor binds); B `max` → `min` in `price_tolerance` — 6 failed / 8 passed, 25 violated (every edge but PO 25.00, where the two terms are equal); C `<=` → `<` in `price_state` — 5 failed / 9 passed, 20 violated (every edge but PO 33.33, where 0.66 is strictly inside 0.6666). Under each, `test_all.py` stayed at 27 passed and the baseline at 12/12. Each restored; 14 passed. `price_tolerance(` appears twice in `match.py`. `TOLERANCE_EDGES` is twelve literals; neither constant is named in `engine_audit.py` or `tests/test_tolerance.py`. D7 kept: tolerance not rounded (33.33 → 0.6666). |
 | 2026-10-07 | GA-04 | adopt | Fail-first on `taxonomy.py`: A `release_within_tolerance` on `PRICE_VARIANCE` (main's cell) — `test_policy.py` 4 failed / 2 passed, `test_gate_audit.py` 3 failed / 5 passed, admitted 23/5376, findings 1 in 1/12 (S03 `release_within_tolerance`, RELEASES PAYMENT), audit / policy / witness 1 violated each; B `auto_match` on `DUPLICATE_INVOICE` — same shape, S08 `auto_match`, RELEASES PAYMENT; C `escalate` removed from `CLEAN_EXACT` — `test_policy.py` 1 failed / 5 passed, `test_gate_audit.py` 3 failed / 5 passed, admitted 21/5376, escalation instead of gold 9/12, findings 0, audit 1 violated (S01), policy 2, witness ok. Under each, `test_all.py` stayed at 27 passed and the baseline at 12/12. Each restored; 6 and 8 passed. Releasing rows are exactly `clean_absorbed`, `clean_exact`. A names S03 only in adopt mode: `under_billed` already leaves S12 with escalate only (S12's release was reproduced in GA-01's run D). |
+| 2026-10-07 | GA-05 | adopt | Fail-first: A `request_credit_memo` on `SHORT_RECEIPT` (main's cell) — `test_all.py` 27 passed, `test_policy.py` 1 failed (witness), `test_gate_audit.py` 3 failed, `test_gate_contract.py` 1 failed (allowed list grew), admitted 24/5376, findings 2 in 2/12 (S05, S10 `request_credit_memo`), audit 2 violated, witness 1, policy ok; baseline 12/12, S11 still `1 permitted`. B S06's gold → `escalate` — `test_all.py` 1 failed / 26 passed (`test_corpus_composition`), `test_policy.py` 1 failed (witness: `uom_mismatch → request_po_amendment`), `test_gate_audit.py` 3 failed, contract 20 passed, admitted 22/5376, escalation instead of gold 9/12, findings 1 (S06 `request_po_amendment`), audit and witness 1 violated each; baseline 12/12. C `hold_pending_receipt` removed from `SHORT_RECEIPT` — `test_all.py` 5 failed / 22 passed, `test_policy.py` 1 failed (permits no remedy), `test_gate_audit.py` 3 failed incl. gold-on-every-scenario, contract 3 failed / 17 passed, admitted 20/5376, gold 10/12, findings 0, audit 2 violated (S05, S10), policy 1, witness ok; baseline 10/12, S05 and S10 DISAGREES WITH GOLD. Each restored; 27, 6, 8, 20 passed. Only A is invisible to the 27 tests; B and C are caught by them (1 and 5 failed). Corrected this document's fail-first line: the ratchet names S05 and S10, not S11. D5 defaults in place, not yet confirmed: one remedy per row. |
 | | | | |
