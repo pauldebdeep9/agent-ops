@@ -103,8 +103,14 @@ from P1's convention. The trade: P1 spent three sessions with determinism checke
 at the wrong layer because generated JSON was stable while the PDFs carried
 wall-clock timestamps. Twelve literals have no such surface.
 
-The cost is real: there is no generator, so a scenario cannot be perturbed
-systematically, and the corpus cannot grow without hand-writing each case.
+The cost is real: the corpus cannot grow without hand-writing each case.
+`corpus/variants.py` now rewrites a case in ways that should change nothing —
+lines reversed, quantities scaled, one line recorded as two — and changes one
+field at a time. Only the engine is run on the results, never the agent. And
+the variant check compares the engine with itself: its conclusions on the
+rewritten case against its conclusions on the original. It reads no gold. A
+variant's right answer is the original's only because the baseline separately
+shows the engine agrees with gold on all 12.
 
 ## No extraction path
 
@@ -128,10 +134,61 @@ in the corpus and make S03 and S12 undetectable. Implemented as 2% floored at
 $0.50, and flagged rather than routed around. $50 is an extended-amount threshold,
 not a unit-price one.
 
-## Single currency, single supplier, no FX
+The tolerance is not rounded to cents. 2% of $33.33 is $0.6666, so a
+difference of $0.66 is inside the band and $0.67 is outside it. The rule is
+held at six PO prices in `TOLERANCE_EDGES`, written by hand and computed from
+nothing.
 
-`currency` is carried on records and never checked. A cross-currency invoice would
-pass the price comparison silently.
+## Mismatched documents are refused, not resolved
+
+The engine compares the PO number, supplier and currency across the
+documents, and checks each receipt line against the PO line it cites. A
+mismatch raises a state that permits only escalation (ADR-003). There is
+still no FX: two currencies are told apart, never converted.
+
+The agent cannot see what raises three of these states. `get_invoice` returns
+no PO number, supplier or currency, and `get_receipt` returns no PO number, so
+the agent has nothing to set against `get_po`. Nor does it see the refusal:
+the gate runs in `eval/runner.py` after the loop has ended, and nothing under
+`iscops/agent/` reads its verdict. A case with mismatched headers is refused
+safely, and the agent can neither resolve it nor explain it. Showing those
+fields changes what the model is shown, which is a decision for the
+scenario-families work.
+
+No scenario in the corpus raises a mismatch state. Each one is exercised by a
+constructed case in `tests/test_escalate_only.py`, not by a scenario with gold.
+
+## Every policy row has one remedy, so the gate picks it
+
+With the four unwitnessed cells removed (ADR-003), each exception class
+permits exactly one remedy, plus escalation. Once the exception set is
+verified, the table fixes the remedy. The agent is left with one choice:
+apply it or escalate. On this corpus the agent is therefore measured on
+naming the exception set the engine verifies, and on choosing between the
+remedy and escalation. It is not measured on choosing between remedies,
+because the gate no longer offers that choice.
+
+The four cells are a PO amendment for a price variance, a hold for
+over-invoicing, a credit memo for a short receipt, and a credit memo for a
+part not on the PO. Each is used by some accounts-payable process. They were
+removed for one shared reason, not four: no tool returns the fact that says
+when the remedy applies — that the new price was agreed, or that the balance
+will never ship. Putting one back needs that tool, and a scenario whose gold
+accepts it.
+
+Of 5,376 proposals the gate admits 22: the gold answer on all 12 scenarios,
+and escalation on the 10 whose gold is not escalation. S11 and S12 permit
+escalation only.
+
+## Under-billing escalates the whole invoice
+
+A unit price below the PO price by more than tolerance raises `under_billed`,
+which permits only escalation. One under-billed line does this for the whole
+invoice, even if another line is overcharged and would on its own call for a
+credit memo. The approval record stores the verified exception classes and
+not the state, so an escalation forced by a state leaves no trace of which
+state forced it. A rejection names the state only inside its message. Both
+are for the trial ledger to fix.
 
 ## The gate is stricter than a real one
 
@@ -145,6 +202,23 @@ disagreement is a finding worth stopping on, not noise to absorb.
 `detect_exceptions` flags `UOM_MISMATCH` and stops evaluating that line. A line
 that has both a UOM error and a real price error reports only the first. Correct
 for the corpus; wrong in general.
+
+## Found by the audit and left as they are
+
+- **No per-PO-line invoiced total in the tools.** The engine sums invoiced
+  quantities per PO line. `compare_quantities` returns one row per invoice
+  line. For 120 EA billed as two lines of 60 against a PO line of 100, each
+  row reads as inside the order and the 120 appears nowhere. The gate refuses
+  `auto_match`. The agent cannot see why.
+- **Billing above the PO quantity is a clean match when the excess was
+  received.** PO 100, received 120, invoiced 120 raises no exception and
+  `auto_match` is permitted. Over-invoicing is defined against what was
+  received. A process owner may want it measured against the order.
+- **Earlier invoices carry numbers, not quantities.** A case holds the
+  invoice numbers already seen on the PO and nothing else about them. The
+  duplicate check works. Cumulative over-billing across invoices is invisible.
+- **The rationale is checked for presence, not truth.** The gate rejects a
+  blank rationale. Nothing checks that what it says is so.
 
 ## One mutant survives, and the mutation reading covers three files
 

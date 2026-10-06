@@ -101,3 +101,22 @@ scenario whose gold accepts it and, if the choice depends on a fact, a tool that
 returns the fact. Or a decision that under-billing deserves its own exception
 class, which changes the system prompt and makes earlier live results
 incomparable.
+
+## Decisions recorded
+
+D5 and D6 were confirmed on 2026-10-07. The others were taken as the
+reference defaults. Each was exercised by a fail-first run recorded in the
+log of `docs/WBS-GA.md`. D7, D8 and D10 concern the engine, not the policy
+table, and are recorded here so that all nine are in one place.
+
+| # | Decision | Taken | Why | Held by |
+|---|---|---|---|---|
+| D3 | Which dispositions release payment | `auto_match` and `release_within_tolerance` | every other disposition stops the invoice until a person or the supplier acts | `RELEASING`; `check policy` |
+| D4 | `price_variance → release_within_tolerance` | removed | a price variance is outside tolerance by definition; the cell predates ADR-002 | `check policy` |
+| D5 | Four remedy cells no scenario accepts | all four removed | one reason for all four: no tool returns the fact that says when the remedy applies | `check witness` |
+| D6 | Under-billing | a state that permits only escalation, not a seventh class | computed from the case, never claimed; the agent's vocabulary and the model surface do not change | `tests/test_escalate_only.py`; the surface digest |
+| D7 | Tolerance rounding | not rounded to cents | the rule as written is 2% of the PO unit price; rounding moves the band at prices such as 33.33 | `TOLERANCE_EDGES`; `check tolerance` |
+| D8 | Several invoice or receipt lines against one PO line | summed per PO line | partial deliveries and split billing are ordinary; letting the last line win changed conclusions on 4/12 and 6/12 scenarios | `check variants` |
+| D9 | Mismatched PO number, currency or supplier | three states that permit only escalation | the documents are not about the same order, or no price comparison between them means anything | `check fields`; `tests/test_escalate_only.py` |
+| D10 | An invoice line billing a different part from the PO line it cites | `part_not_on_po` | the class already says the PO does not cover what is billed | `po_line_for`; `check fields` |
+| D11 | A receipt line for an unknown PO line, a different part or a different unit | a state that permits only escalation | it is not evidence that the ordered goods arrived; ignoring the line would read as a short receipt | `check fields`; `tests/test_escalate_only.py` |
