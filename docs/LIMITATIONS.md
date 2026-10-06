@@ -146,6 +146,56 @@ disagreement is a finding worth stopping on, not noise to absorb.
 that has both a UOM error and a real price error reports only the first. Correct
 for the corpus; wrong in general.
 
+## One mutant survives, and the mutation reading covers three files
+
+`scripts/mutate.py` makes one small change at a time to `approval/gate.py`,
+`domain/taxonomy.py` and `tools/match.py` — a comparison, a boolean, a
+constant, a deleted statement, one cell of a policy set — and runs the whole
+suite against each. On this branch 166 of 167 changes fail the suite. On
+`main` at `fda9f00`, 68 of 132 did. The two counts are over different sets of
+changes, because the three files differ between the trees. They are two
+readings, not one reading that improved.
+
+| | `main` | this branch |
+|---|---|---|
+| changes made | 132 | 167 |
+| caught by the suite | 68 | 166 |
+| policy cells: made, not caught | 56, 40 | 70, 0 |
+| constants: made, not caught | 15, 11 | 18, 0 |
+
+The one change left standing is `tools/match.py:53`, `delta > 0` to
+`delta >= 0` in `price_state`. No test can catch it, because it changes
+nothing: a zero difference returns `EXACT` earlier in the same function, so
+that line never sees zero and the two comparisons agree on every value that
+reaches it. Checked by running it: over 3,606 price pairs — the six PO prices
+of the tolerance edge table, each against every whole-cent difference from
+−3.00 to +3.00 — the changed function returns the same state as the original
+on all 3,606.
+
+What the reading does not cover:
+
+- **Three files.** The instrument was pointed at the tools once
+  (`--targets iscops/tools/registry.py`): 15 of 19 changes were caught. The
+  four left standing are `frozen=True` on the `Tool` dataclass (line 22),
+  `parents=True` and `exist_ok=True` where the run directory is created
+  (line 178), and `"recorded": True` in the reply `write_proposal` returns
+  (line 188). The loop ends on that call, so no model reads that reply. None
+  of the four is closed here. The agent loop, the runner and the transcript
+  writer have not been mutated at all.
+- **Single changes, of a few kinds.** The operators are listed in the
+  script's docstring. It does not reorder statements, change a string, or
+  change two things at once. The order of the gate's five conditions is held
+  by the contract check, not by this pass.
+- **The falsifiability suite reaches the engine and the gate, not the
+  tools.** `tests/test_falsifiability.py` breaks things by replacing module
+  attributes. `tools/registry.py` binds `po_line_for` and
+  `received_by_po_line` at import, so under those breaks the tools keep the
+  working versions. The suite shows that each check can go red. It does not
+  show the tools following the engine.
+- **Not a score.** 166 of 167 says these three files are pinned by the
+  tests. It says nothing about what a model proposes or how often it is
+  right.
+
 ## Not built, deliberately
 
 - **Nothing that moves money.** Exactly one non-read-only tool exists
