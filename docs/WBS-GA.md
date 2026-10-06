@@ -266,7 +266,7 @@ it), `classify()` already knows `acceptable`, `CHECKS` has seven entries.
 
 ---
 
-## GA-02 — The gate's five conditions, over every proposal ☐
+## GA-02 — The gate's five conditions, over every proposal ☒
 
 **Priority** critical · **~100 LOC** (+~130 test) · **Prompts** 4 · **Depends** GA-01
 
@@ -795,4 +795,5 @@ Found while building the reference, deliberately left for a later feature:
 | 2026-10-06 | adopt order corrected | — | The first version of this document said to commit GA-00's instruments and then `git am`. The patch creates those same files, so `git am` stops with "already exists in index" (reproduced). Adopt mode now applies the patch first and takes the before-reading with `--repo`. Also checked: re-running the patched gate on the 10 proposals stored under `runs/` (12 Aug) gives the same verdict on 10/10. |
 | 2026-10-06 | GA-00 | adopt entry | Patch applied as `4f52f7f`; its patch id equals the patch file's (`3d24357b…`). On `Sai2608` (Python 3.11.15, pydantic 2.13.4, pytest 9.1.1): 27 passed on `main`, 190 on the branch; baseline 12/12 on both. Surface digest `1a627aec…f96c241`. Mutation on `main`: killed 68/132, survived 64/132 — 40/56 policy and 11/15 constant mutants surviving. |
 | 2026-10-06 | GA-01 | adopt | Audit under `main`'s policy (five cells restored, escalate-only intersection off): admitted 32/5376, gold 12/12, escalation instead of gold 10/12, findings 10 in 7/12 — the ten named in §GA-01, S03 and S12 `release_within_tolerance` marked RELEASES PAYMENT. Now: admitted 22/5376, findings 0, seven checks ok. Fail-first: A `auto_match` on `DUPLICATE_INVOICE` — `test_all.py` 27 passed, `test_gate_audit.py` 3 failed naming `('S08', 'auto_match')`; B claimed-vs-verified check off — `test_all.py` 1 failed / 26 passed, `test_gate_audit.py` 3 failed incl. the verified-set test (1408/5376 admitted); C `escalate` removed from `CLEAN_ABSORBED` — `test_all.py` 27 passed, `test_gate_audit.py` 3 failed incl. escalate-on-every-scenario (S02). Each restored; 8 passed. |
+| 2026-10-06 | GA-02 | adopt | 258,048 proposals checked (21,504 per scenario × 12), 0 disagreements; `tests/test_gate_contract.py` runs in 4.9 s (20 tests; slowest 1.91 s, the whole-corpus contract check). `contract_violations` now reports its denominator (`d2e5616`). Fail-first: A rationale check off — `test_all.py` 27 passed, contract 4/21504 on S01–S10 and 2/21504 on S11 and S12 (they permit only escalate), `rationale_empty` never produced; invisible to the 27 tests. B evidence check off — `test_all.py` 1 failed / 26 passed, contract 13 failed, 9408/21504 per scenario, `evidence_missing` never produced. C evidence check moved above the case check — `test_all.py` 27 passed, contract 13 failed, 9408/21504 per scenario reported under the wrong condition. Each restored; 20 passed. |
 | | | | |
